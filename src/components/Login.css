@@ -1,0 +1,90 @@
+/* Genel sayfa ayarları */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #efa357; /* Tatlı turuncu arka plan */
+  margin: 0;
+  padding: 0;
+}
+
+/* Login form container */
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #efa357; /* Tatlı turuncu arka plan */
+}
+
+/* Login form içeriği */
+.login-container {
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+/* Başlık */
+.login-title {
+  color: #333;
+  font-size: 24px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+/* Hata mesajı */
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* Input alanları */
+.input-field {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.input-field:focus {
+  border-color: #fe9935; /* Focus rengi tatlı turuncu */
+  box-shadow: 0 0 5px rgba(255, 158, 59, 0.4); /* Focus sırasında hafif gölge */
+}
+
+/* Buton */
+.submit-button {
+  background-color: #333 !important; /* Siyah renk ve !important ile yüksek öncelik */
+  color: white !important;
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Hover durumu */
+.submit-button:hover {
+  background-color: #FF9E3B !important; /* Üzerine gelindiğinde tatlı turuncu */
+  color: white !important;
+  transform: scale(1.05);
+}
+
+
+/* Mobil uyumlu tasarım */
+@media screen and (max-width: 600px) {
+  .login-container {
+    padding: 20px;
+  }
+
+  .login-title {
+    font-size: 20px;
+  }
+}
