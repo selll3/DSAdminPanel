@@ -1,22 +1,35 @@
-import React from "react";
-import Dashboard from "./components/Dashboard";
-import Sidebar from "./components/Sidebar"; // Sidebar'ı dahil ettik
-import "./App.css";
+import React, { useState } from "react";
+import Login from "./components/Login"; // Login sayfası bileşeni
+import Sidebar from "./components/Sidebar"; // Sidebar bileşeni
+import "./App.css"; // Global CSS dosyanız
 
 const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Kullanıcı oturum durumu
+
+  const handleLogin = (status) => {
+    setIsAuthenticated(status); // Oturum durumunu güncelle
+  };
+
   return (
-    <div className="App">
-      <div className="dashboard-container">
-        <Sidebar /> {/* Sidebar'ı burada ekliyoruz */}
-        <Dashboard /> {/* Dashboard sayfasını direkt render ediyoruz */}
-      </div>
+    <div className="app">
+      {/* Kullanıcı oturum açmamışsa Login sayfası gösterilir */}
+      {!isAuthenticated ? (
+        <Login onLogin={handleLogin} />
+      ) : (
+        // Oturum açılmışsa Sidebar ve içerik gösterilir
+        <div className="dashboard">
+          <Sidebar />
+          <div className="content">
+            <h1>Admin Panel</h1>
+            <p>Hoş geldiniz! Lütfen sol menüden bir seçenek seçin.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default App;
-
-
 
 
 
