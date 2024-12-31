@@ -1,6 +1,6 @@
 .dashboard {
     padding: 20px;
-    margin-left: 330px; /* Sidebar'ın genişliği kadar kaydırma */
+    margin-left: 50px; /* Sidebar'ın genişliği kadar kaydırma */
     margin-right: 0; /* Sağdaki boşluğu kaldırdık */
     background-color: #fffefe;
     z-index: 1; /* Dashboard içeriklerinin sidebar'ın altında olmamasını sağla */

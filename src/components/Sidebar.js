@@ -2,8 +2,15 @@ import React, { useState } from "react";
 import './Sidebar.css'; // Sidebar için stil dosyasını dahil edelim
 
 const Sidebar = () => {
+  const [isOpen, setIsOpen] = useState(true); // Sidebar'ın açılıp kapanmasını kontrol eden durum
+
+  // Sidebar'ı açma/kapatma işlevi
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-header">
         <h2>Demse Admin Panel</h2>
       </div>
@@ -13,6 +20,10 @@ const Sidebar = () => {
         <li className="menu-item">Teklif Ver</li>
         <li className="menu-item">Logout</li>
       </ul>
+      {/* Sidebar'ı açıp kapatmak için buton */}
+      <button className="sidebar-toggle" onClick={toggleSidebar}>
+        {isOpen ? 'Gizle' : 'Göster'}
+      </button>
     </div>
   );
 };
