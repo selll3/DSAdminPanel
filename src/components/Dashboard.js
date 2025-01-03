@@ -1,39 +1,17 @@
 import React from "react";
-import "./Dashboard.css"; // Dashboard için stil dosyasını dahil edelim
+import "./Dashboard.css"; // CSS dosyasını yine dahil ediyoruz
 
-const Dashboard = () => {
+const Dashboard = ({ user, isSidebarOpen }) => {
   return (
-    <div className="dashboard">
-      <div className="dashboard-header">
-        <h2>Demse Admin Panel</h2>
-        <p>Bu bir deneme sayfasıdır</p>
-      </div>
-
-      <div className="dashboard-content">
-        <div className="dashboard-stats">
-          <div className="stat-card">
-            <h3>Users</h3>
-            <p>120</p>
-          </div>
-          <div className="stat-card">
-            <h3>Orders</h3>
-            <p>52</p>
-          </div>
-          <div className="stat-card">
-            <h3>Revenue</h3>
-            <p>$13,450</p>
-          </div>
-        </div>
-
-        <div className="dashboard-recent-activity">
-          <h3>Recent Activity</h3>
-          <ul>
-            <li>User "John Doe" added a new order.</li>
-            <li>User "Jane Smith" updated their profile.</li>
-            <li>User "Mark Lee" made a payment of $120.</li>
-          </ul>
-        </div>
-      </div>
+    <div
+      className="dashboard"
+      style={{
+        marginLeft: isSidebarOpen ? "250px" : "0", // Sidebar açıkken 250px, kapalıyken 0px margin-left
+        transition: "margin-left 0.3s ease", // Geçiş animasyonu
+      }}
+    >
+      <h2>Demse Admin Paneline Hoş Geldin!, {user.token ? "Admin" : "User"}</h2>
+      {/* Dashboard içeriği burada */}
     </div>
   );
 };

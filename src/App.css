@@ -1,24 +1,14 @@
-.dashboard {
+.dashboard-container {
+  display: flex; /* Sidebar ve Dashboard'u yan yana yerleştirmek için flex kullanıyoruz */
+}
+
+.sidebar {
+  width: 200px;
+  background-color: #f4f4f4;
   padding: 20px;
-  margin-left: 250px; /* Sidebar'ın genişliği kadar kaydırma */
-  transition: margin-left 0.3s ease; /* Sidebar açıldıkça içeriğin kayması */
 }
 
-.dashboard.sidebar-closed {
-  margin-left: 0; /* Sidebar kapalı olduğunda Dashboard sağa kayar */
-}
-
-.dashboard-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.dashboard-header h2 {
-  font-size: 32px;
-  color: #333;
-}
-
-.dashboard-header p {
-  font-size: 16px;
-  color: #666;
+.dashboard {
+  flex: 1; /* Dashboard alanının geri kalan kısmını kaplamasını sağlıyoruz */
+  padding: 20px;
 }

@@ -1,5 +1,5 @@
-/* Genel sayfa ayarları */
-body {
+/* Genel Sayfa Ayarları - Sadece Login Sayfası için geçerli olacak */
+.login-page {
   font-family: 'Arial', sans-serif;
   margin: 0;
   padding: 0;
@@ -7,46 +7,25 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(45deg, #efa357, #a3a2a2, #efa357, #efa357, #a3a2a2); /* Başlangıç gradyanı */
-  background-size: 400% 400%; /* Arka planın daha büyük olması */
-  animation: gradientAnimation 6s ease infinite; /* Animasyonu 6 saniyede bir döndür */
+  background: linear-gradient(45deg, #efa357, #a3a2a2, #efa357, #efa357, #a3a2a2);
+  background-size: 400% 400%;
+  animation: gradientAnimation 6s ease infinite;
 }
 
-/* Yanar döner animasyonu */
 @keyframes gradientAnimation {
-  0% {
-    background-position: 0% 50%;
-    animation-duration: 6s; /* Turuncu daha uzun süre sabit */
-  }
-  25% {
-    background-position: 100% 0%;
-    animation-duration: 4s; /* Turuncu geçişi */
-  }
-  50% {
-    background-position: 100% 50%;
-    animation-duration: 6s; /* Turuncu daha uzun süre sabit */
-  }
-  75% {
-    background-position: 0% 100%;
-    animation-duration: 4s; /* Turuncu geçişi */
-  }
-  100% {
-    background-position: 0% 50%;
-    animation-duration: 6s; /* Turuncu tekrar uzun süre sabit */
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-
-/* Login form container */
+/* Login Sayfası */
 .login-page {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  z-index: 1; /* Formun üstte görünmesini sağlamak */
 }
 
-/* Login form içeriği */
 .login-container {
   background-color: #fff;
   padding: 40px;
@@ -55,10 +34,8 @@ body {
   width: 100%;
   max-width: 400px;
   text-align: center;
-  z-index: 2; /* Formun arka planın üstünde olması için */
 }
 
-/* Başlık */
 .login-title {
   color: #333;
   font-size: 28px;
@@ -67,14 +44,12 @@ body {
   letter-spacing: 1px;
 }
 
-/* Hata mesajı */
 .error-message {
   color: rgba(110, 3, 250, 0.471);
   font-size: 14px;
   margin-bottom: 20px;
 }
 
-/* Input alanları */
 .input-field {
   width: 100%;
   padding: 12px;
@@ -86,13 +61,12 @@ body {
 }
 
 .input-field:focus {
-  border-color: #ff9e3b; /* Focus rengi tatlı turuncu */
-  box-shadow: 0 0 8px rgba(255, 158, 59, 0.5); /* Focus sırasında hafif gölge */
+  border-color: #ff9e3b;
+  box-shadow: 0 0 8px rgba(255, 158, 59, 0.5);
 }
 
-/* Buton */
 .submit-button {
-  background-color: #333 !important; /* Siyah renk ve !important ile yüksek öncelik */
+  background-color: #333 !important;
   color: white !important;
   border: none;
   padding: 14px 22px;
@@ -103,14 +77,11 @@ body {
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-/* Hover durumu */
 .submit-button:hover {
-  background-color: #ff9e3b !important; /* Üzerine gelindiğinde tatlı turuncu */
-  color: white !important;
+  background-color: #ff9e3b !important;
   transform: scale(1.05);
 }
 
-/* Mobil uyumlu tasarım */
 @media screen and (max-width: 600px) {
   .login-container {
     padding: 20px;

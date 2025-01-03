@@ -1,14 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import './Sidebar.css'; // Sidebar için stil dosyasını dahil edelim
 
-const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(true); // Sidebar'ın açılıp kapanmasını kontrol eden durum
-
-  // Sidebar'ı açma/kapatma işlevi
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
-
+const Sidebar = ({ isOpen, onSidebarToggle }) => { // onSidebarToggle burada props olarak geliyor
   return (
     <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-header">
@@ -21,7 +14,7 @@ const Sidebar = () => {
         <li className="menu-item">Logout</li>
       </ul>
       {/* Sidebar'ı açıp kapatmak için buton */}
-      <button className="sidebar-toggle" onClick={toggleSidebar}>
+      <button className="sidebar-toggle" onClick={onSidebarToggle}>
         {isOpen ? 'Gizle' : 'Göster'}
       </button>
     </div>
@@ -29,11 +22,6 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-
-
-
-
-
 
 
 

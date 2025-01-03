@@ -1,26 +1,27 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import './Login.css'; // Stil dosyasını dahil edelim
+import React, { useState } from "react";
+import { loginAdmin } from "../api/api"; // API fonksiyonunu buradan alıyoruz
+import { useNavigate } from "react-router-dom"; // Yönlendirme için useNavigate kullanıyoruz
+import "./Login.css"; // CSS dosyasını yine dahil ediyoruz
 
 const Login = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState(""); // Kullanıcı adı durumu
+  const [password, setPassword] = useState(""); // Şifre durumu
+  const [error, setError] = useState(""); // Hata mesajı durumu
+  const navigate = useNavigate(); // useNavigate hook'u ile yönlendirme
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:5000/api/admin/login', {
-        username,
-        password,
-      });
-
-      if (response.data.message === 'Login Successful') {
-        onLogin(true);
+      const data = await loginAdmin(username, password); // loginAdmin fonksiyonunu çağırıyoruz
+      if (data.message === "Login Successful") {
+        onLogin(true); // Giriş başarılı olduğunda onLogin fonksiyonu ile kullanıcıyı giriş yapmış olarak ayarlıyoruz
+        localStorage.setItem("token", data.token); // Token'ı localStorage'a kaydediyoruz
+        navigate("/dashboard"); // Giriş başarılı olduğunda Dashboard'a yönlendiriyoruz
       }
     } catch (err) {
-      setError('Invalid username or password.');
+      setError("An unexpected error occurred. Please try again later."); // Hata mesajını gösteriyoruz
+      console.error(err); // Hata için console log
     }
   };
 
@@ -28,23 +29,23 @@ const Login = ({ onLogin }) => {
     <div className="login-page">
       <div className="login-container">
         <h2 className="login-title">Admin Login</h2>
-        {error && <p className="error-message">{error}</p>}
+        {error && <p className="error-message">{error}</p>} {/* Hata varsa mesajı göster */}
         <form className="login-form" onSubmit={handleSubmit}>
           <input
             type="text"
             className="input-field"
             placeholder="Username"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setUsername(e.target.value)} // Kullanıcı adını güncelle
           />
           <input
             type="password"
             className="input-field"
             placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)} // Şifreyi güncelle
           />
-          <button type="submit" className="submit-button">Login</button>
+          <button type="submit" className="submit-button">Login</button> {/* Giriş butonu */}
         </form>
       </div>
     </div>
