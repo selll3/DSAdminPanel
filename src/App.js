@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard"; // Dashboard'ı dahil ediyoruz
 import Sidebar from "./components/Sidebar"; // Sidebar'ı dahil ediyoruz
+import TableEditor from "./components/TableEditor"; //  Yeni eklenen bileşen
+
 
 const App = () => {
   const [user, setUser] = useState(null); // Kullanıcı bilgisini tutan state
@@ -47,6 +49,22 @@ const App = () => {
             )
           }
         />
+        <Route
+          path="/table-editor"
+          element={
+            user ? (
+              <div className="dashboard-container">
+                <Sidebar isOpen={isSidebarOpen} onSidebarToggle={toggleSidebar} />
+                <TableEditor isSidebarOpen={isSidebarOpen} /> {/* <-- Prop'u ekledik */}
+                
+              </div>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+  
+
       </Routes>
     </Router>
   );

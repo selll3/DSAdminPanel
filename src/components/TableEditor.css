@@ -1,0 +1,21 @@
+.table-container {
+  position: absolute;
+  top: 0;
+  left: 300px; /* Sidebar açıkken daha fazla sağa kayacak */
+  width: calc(100% - 300px); /* Sayfanın genişliği ayarlandı */
+  transition: all 0.3s ease-in-out;
+  padding: 20px;
+}
+
+
+.table-container.closed {
+  left: 60px !important; /* Sidebar kapalıyken */
+  width: calc(100% - 80px) !important;
+}
+
+/*.add-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 20px;
+}*/
