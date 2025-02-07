@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, Typography, TextField, Button, MenuItem } from "@mui/material";
-import "./TeklifVer.css"; // Stil dosyası
+import { Card, CardContent, Typography, TextField, Button, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import "./TeklifVer.css"; 
 
 const TeklifVer = ({ isSidebarOpen }) => {
-  const [musteriler, setMusteriler] = useState([]); // Müşteri listesi
-  const [urunler, setUrunler] = useState([]); // Ürün listesi
+  const [musteriler, setMusteriler] = useState([]);
+  const [urunler, setUrunler] = useState([]);
   const [secilenMusteri, setSecilenMusteri] = useState("");
   const [secilenUrun, setSecilenUrun] = useState("");
   const [adet, setAdet] = useState("");
   const [fiyat, setFiyat] = useState("");
-  const [musteriSearch, setMusteriSearch] = useState(""); // Müşteri arama
-  const [urunSearch, setUrunSearch] = useState(""); // Ürün arama
+  const [musteriSearch, setMusteriSearch] = useState("");
+  const [urunSearch, setUrunSearch] = useState("");
+  const [eskiFiyat, setEskiFiyat] = useState("");
+  const [yeniFiyat, setYeniFiyat] = useState("");
+  const [openDialog, setOpenDialog] = useState(false);
+  const [tempYeniFiyat, setTempYeniFiyat] = useState("");
 
-  // Örnek müşteri ve ürün verilerini yükleme
   useEffect(() => {
     setMusteriler([
       { id: 1, adSoyad: "Ahmet Yılmaz" },
@@ -28,39 +31,65 @@ const TeklifVer = ({ isSidebarOpen }) => {
     ]);
   }, []);
 
-  // Müşteri arama fonksiyonu
   const filteredMusteriler = musteriSearch
     ? musteriler.filter((musteri) =>
-        musteri.adSoyad.toLowerCase().includes(musteriSearch.toLowerCase()) // Aramaya göre filtreleme
+        musteri.adSoyad.toLowerCase().includes(musteriSearch.toLowerCase())
       )
     : musteriler;
 
-  // Ürün arama fonksiyonu (ürün kodu ile)
   const filteredUrunler = urunSearch
-    ? urunler.filter((urun) =>
-        urun.id.toString().includes(urunSearch) // Ürün kodu üzerinden arama yapıyoruz
-      )
+    ? urunler.filter((urun) => urun.id.toString().includes(urunSearch))
     : urunler;
 
-  // Fiyat hesaplama fonksiyonu
+  useEffect(() => {
+    if (secilenUrun) {
+      const urun = urunler.find((u) => u.id === parseInt(secilenUrun));
+      if (urun) {
+        setEskiFiyat(urun.fiyat);
+        setYeniFiyat(""); 
+      }
+    }
+  }, [secilenUrun]);
+
+  const handleFiyatDegistir = () => {
+    if (!secilenUrun) {
+      alert("Lütfen önce bir ürün seçin!");
+      return;
+    }
+    setOpenDialog(true);
+  };
+
+  const handleDialogClose = (confirm) => {
+    if (confirm) {
+      setYeniFiyat(tempYeniFiyat);
+    }
+    setTempYeniFiyat("");
+    setOpenDialog(false);
+  };
+
   const handleFiyatHesapla = () => {
     const urun = urunler.find((u) => u.id === parseInt(secilenUrun));
     if (urun) {
+      const fiyatKaynak = yeniFiyat ? parseInt(yeniFiyat) : urun.fiyat;
       if (parseInt(adet) > urun.stok) {
         alert("Yetersiz stok!");
       } else {
-        setFiyat(urun.fiyat * parseInt(adet));
+        setFiyat(fiyatKaynak * parseInt(adet));
       }
     }
   };
 
-  // Teklif oluşturma fonksiyonu
   const handleTeklifVer = () => {
     if (!secilenMusteri || !secilenUrun || !adet || !fiyat) {
       alert("Lütfen tüm alanları doldurun!");
       return;
     }
-    alert(`Teklif Oluşturuldu! Müşteri: ${secilenMusteri}, Ürün: ${secilenUrun}, Adet: ${adet}, Fiyat: ${fiyat}`);
+    alert(`Teklif Oluşturuldu! 
+    Müşteri: ${secilenMusteri}, 
+    Ürün: ${secilenUrun}, 
+    Adet: ${adet}, 
+    Birim Fiyat: ${yeniFiyat || eskiFiyat}, 
+    Toplam Fiyat: ${fiyat}`);
   };
 
   return (
@@ -71,18 +100,16 @@ const TeklifVer = ({ isSidebarOpen }) => {
         <CardContent>
           <Typography variant="h6">Teklif Bilgileri</Typography>
 
-          {/* Müşteri Arama */}
           <TextField
             label="Müşteri Ara"
             fullWidth
             variant="outlined"
             size="small"
-            value={musteriSearch} // Arama kutusuna yazdığınız metin görünecek
-            onChange={(e) => setMusteriSearch(e.target.value)} // Arama metnini güncelle
+            value={musteriSearch}
+            onChange={(e) => setMusteriSearch(e.target.value)}
             style={{ marginBottom: "10px" }}
           />
-          
-          {/* Müşteri Seçimi */}
+
           <TextField
             select
             label="Müşteri Seç"
@@ -91,7 +118,7 @@ const TeklifVer = ({ isSidebarOpen }) => {
             size="small"
             value={secilenMusteri}
             onChange={(e) => setSecilenMusteri(e.target.value)}
-            style={{ marginBottom: "10px" }}
+            style={{ marginBottom: "20px" }}
           >
             {filteredMusteriler.map((musteri) => (
               <MenuItem key={musteri.id} value={musteri.id}>
@@ -100,18 +127,16 @@ const TeklifVer = ({ isSidebarOpen }) => {
             ))}
           </TextField>
 
-          {/* Ürün Arama */}
           <TextField
             label="Ürün Ara (Ürün Kodu)"
             fullWidth
             variant="outlined"
             size="small"
-            value={urunSearch} // Ürün arama kısmında yazdığınız metin görünecek
-            onChange={(e) => setUrunSearch(e.target.value)} // Ürün arama metnini güncelle
+            value={urunSearch}
+            onChange={(e) => setUrunSearch(e.target.value)}
             style={{ marginBottom: "10px" }}
           />
-          
-          {/* Ürün Seçimi */}
+
           <TextField
             select
             label="Ürün Seç"
@@ -129,7 +154,16 @@ const TeklifVer = ({ isSidebarOpen }) => {
             ))}
           </TextField>
 
-          {/* Adet Girişi */}
+          {secilenUrun && (
+            <div style={{ marginBottom: "20px" }}>
+              <Typography variant="body1">Eski Fiyat: {eskiFiyat}₺</Typography>
+              <Typography variant="body1">Yeni Fiyat: {yeniFiyat || "Değiştirilmedi"}</Typography>
+              <Button variant="outlined" onClick={handleFiyatDegistir}>
+                Birim Fiyatı Değiştir
+              </Button>
+            </div>
+          )}
+
           <TextField
             label="Adet"
             fullWidth
@@ -141,7 +175,6 @@ const TeklifVer = ({ isSidebarOpen }) => {
             style={{ marginBottom: "10px" }}
           />
 
-          {/* Fiyat Alanı */}
           <TextField
             label="Fiyat"
             fullWidth
@@ -152,7 +185,6 @@ const TeklifVer = ({ isSidebarOpen }) => {
             style={{ marginBottom: "20px" }}
           />
 
-          {/* Butonlar */}
           <div className="button-container">
             <Button variant="contained" color="primary" onClick={handleFiyatHesapla}>
               Fiyat Hesapla
@@ -164,6 +196,25 @@ const TeklifVer = ({ isSidebarOpen }) => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={openDialog} onClose={() => handleDialogClose(false)}>
+        <DialogTitle>Fiyatı Değiştir</DialogTitle>
+        <DialogContent>
+          <DialogContentText>Yeni birim fiyatı girin:</DialogContentText>
+          <TextField
+            fullWidth
+            variant="outlined"
+            size="small"
+            type="number"
+            value={tempYeniFiyat}
+            onChange={(e) => setTempYeniFiyat(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => handleDialogClose(false)}>Vazgeç</Button>
+          <Button onClick={() => handleDialogClose(true)} color="primary">Evet</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

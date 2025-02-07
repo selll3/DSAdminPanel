@@ -1,33 +1,27 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import "./Sidebar.css"; // Stil dosyası
+import "./Sidebar.css";
 
 const Sidebar = ({ isOpen, onSidebarToggle }) => {
-  const navigate = useNavigate(); // useNavigate hook'unu kullanıyoruz
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Çıkış yapma işlemi: Token'ı sil
-    localStorage.removeItem("authToken"); // Token'ı sil
-
-    // Diğer çıkış işlemleri (eğer gerekiyorsa) burada yapılabilir
-
-    // Giriş sayfasına yönlendir
-    navigate("/login");
+    localStorage.removeItem("token"); // Kullanıcı token'ını temizle
+    navigate("/login", { replace: true }); // Giriş sayfasına yönlendir
   };
+
   return (
     <div className={`sidebar ${isOpen ? "open" : "closed"}`}>
       <div className="sidebar-header">
         <h2>Demse Admin Panel</h2>
       </div>
       <ul className="sidebar-menu">
-        <li className="menu-item" onClick={() => navigate("/dashboard")}>Ana Sayfa</li> 
-        <li className="menu-item" onClick={() => navigate("/table-editor")}>Tablo Düzenlemeleri</li> {/*  Yönlendirme eklendi */}
+        <li className="menu-item" onClick={() => navigate("/dashboard")}>Ana Sayfa</li>
+        <li className="menu-item" onClick={() => navigate("/table-editor")}>Tablo Düzenlemeleri</li>
         <li className="menu-item" onClick={() => navigate("/teklif-ver")}>Teklif Ver</li>
         <li className="menu-item" onClick={() => navigate("/musteri-olustur")}>Müşteri Oluştur</li>
-        <li className="menu-item" onClick={handleLogout}>
-          Çıkış Yap
-        </li>
+        <li className="menu-item" onClick={handleLogout}>Çıkış Yap</li>
       </ul>
       <button className="sidebar-toggle" onClick={onSidebarToggle}>
         {isOpen ? "Gizle" : "Göster"}
@@ -37,7 +31,6 @@ const Sidebar = ({ isOpen, onSidebarToggle }) => {
 };
 
 export default Sidebar;
-
 
 
 
