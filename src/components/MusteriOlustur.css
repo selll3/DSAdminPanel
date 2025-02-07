@@ -1,0 +1,38 @@
+.musteri-olustur-container {
+    transition: all 0.3s ease-in-out;
+    padding: 20px;
+    display: flex;
+    justify-content: center; /* Yatayda ortalanma */
+    align-items: center;     /* Dikeyde ortalanma */
+    height: 100vh;           /* Sayfanın tam yüksekliği */
+    width: 100%;             /* Sayfa genişliği */
+  }
+  
+  .musteri-olustur-container.open {
+    margin-left: 300px; /* Sidebar açıkken sağa kayacak */
+  }
+  
+  .musteri-olustur-container.closed {
+    margin-left: 60px; /* Sidebar kapalıyken sola kayacak */
+  }
+  
+  /* Kartı daha küçük ve sayfanın ortasında yapmak için max-width ve padding ayarları */
+  .mui-card {
+    max-width: 500px;   /* Kartın genişliği */
+    width: 100%;        /* Kart genişliğini %100 yaparak ekranın boyutuna uyum sağla */
+    margin: 20px 0;     /* Üstten ve alttan boşluk */
+  }
+  
+  /* Butonun üst kısmındaki konumlandırma */
+  button {
+    background-color: orange;
+    color: white;
+    margin-top: 20px;
+  }
+  
+  .musteri-olustur-container h1 {
+    text-align: center;  /* Başlık ortalanacak */
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  

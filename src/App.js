@@ -4,6 +4,8 @@ import Login from "./components/Login";
 import Dashboard from "./components/Dashboard"; // Dashboard'ı dahil ediyoruz
 import Sidebar from "./components/Sidebar"; // Sidebar'ı dahil ediyoruz
 import TableEditor from "./components/TableEditor"; //  Yeni eklenen bileşen
+import TeklifVer from "./components/TeklifVer";
+import MusteriOlustur from "./components/MusteriOlustur";
 
 
 const App = () => {
@@ -63,7 +65,33 @@ const App = () => {
             )
           }
         />
-  
+        <Route
+  path="/teklif-ver"
+  element={
+    user ? (
+      <div className="dashboard-container">
+        <Sidebar isOpen={isSidebarOpen} onSidebarToggle={toggleSidebar} />
+        <TeklifVer isSidebarOpen={isSidebarOpen} /> {/* <-- Burada geçtik */}
+      </div>
+    ) : (
+      <Navigate to="/login" />
+    )
+  }
+/>
+<Route
+  path="/musteri-olustur"
+  element={
+    user ? (
+      <div className="dashboard-container">
+        <Sidebar isOpen={isSidebarOpen} onSidebarToggle={toggleSidebar} />
+        <MusteriOlustur isSidebarOpen={isSidebarOpen} /> {/* <-- Burada geçtik */}
+      </div>
+    ) : (
+      <Navigate to="/login" />
+    )
+  }
+/>
+
 
       </Routes>
     </Router>

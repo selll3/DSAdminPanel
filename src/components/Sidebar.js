@@ -6,6 +6,15 @@ import "./Sidebar.css"; // Stil dosyası
 const Sidebar = ({ isOpen, onSidebarToggle }) => {
   const navigate = useNavigate(); // useNavigate hook'unu kullanıyoruz
 
+  const handleLogout = () => {
+    // Çıkış yapma işlemi: Token'ı sil
+    localStorage.removeItem("authToken"); // Token'ı sil
+
+    // Diğer çıkış işlemleri (eğer gerekiyorsa) burada yapılabilir
+
+    // Giriş sayfasına yönlendir
+    navigate("/login");
+  };
   return (
     <div className={`sidebar ${isOpen ? "open" : "closed"}`}>
       <div className="sidebar-header">
@@ -14,8 +23,11 @@ const Sidebar = ({ isOpen, onSidebarToggle }) => {
       <ul className="sidebar-menu">
         <li className="menu-item" onClick={() => navigate("/dashboard")}>Ana Sayfa</li> 
         <li className="menu-item" onClick={() => navigate("/table-editor")}>Tablo Düzenlemeleri</li> {/*  Yönlendirme eklendi */}
-        <li className="menu-item">Teklif Ver</li>
-        <li className="menu-item">Logout</li>
+        <li className="menu-item" onClick={() => navigate("/teklif-ver")}>Teklif Ver</li>
+        <li className="menu-item" onClick={() => navigate("/musteri-olustur")}>Müşteri Oluştur</li>
+        <li className="menu-item" onClick={handleLogout}>
+          Çıkış Yap
+        </li>
       </ul>
       <button className="sidebar-toggle" onClick={onSidebarToggle}>
         {isOpen ? "Gizle" : "Göster"}

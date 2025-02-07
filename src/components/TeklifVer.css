@@ -1,0 +1,19 @@
+.teklif-container {
+    position: absolute;
+    top: 0;
+    left: 300px;
+    width: calc(100% - 300px);
+    transition: all 0.3s ease-in-out;
+    padding: 20px;
+  }
+  
+  .teklif-container.closed {
+    left: 40px !important;
+    width: calc(100% - 80px) !important;
+  }
+  
+  .button-container {
+    display: flex;
+    justify-content: space-between;
+  }
+  
