@@ -9,19 +9,38 @@ const TeklifVer = ({ isSidebarOpen }) => {
   const [secilenUrun, setSecilenUrun] = useState("");
   const [adet, setAdet] = useState("");
   const [fiyat, setFiyat] = useState("");
+  const [musteriSearch, setMusteriSearch] = useState(""); // Müşteri arama
+  const [urunSearch, setUrunSearch] = useState(""); // Ürün arama
 
   // Örnek müşteri ve ürün verilerini yükleme
   useEffect(() => {
     setMusteriler([
       { id: 1, adSoyad: "Ahmet Yılmaz" },
       { id: 2, adSoyad: "Mehmet Kaya" },
+      { id: 3, adSoyad: "Mehmet Demir" },
+      { id: 4, adSoyad: "Ahmet Çelik" }
     ]);
 
     setUrunler([
       { id: 101, ad: "Laptop", fiyat: 15000, stok: 5 },
       { id: 102, ad: "Telefon", fiyat: 8000, stok: 10 },
+      { id: 103, ad: "Tablet", fiyat: 6000, stok: 7 }
     ]);
   }, []);
+
+  // Müşteri arama fonksiyonu
+  const filteredMusteriler = musteriSearch
+    ? musteriler.filter((musteri) =>
+        musteri.adSoyad.toLowerCase().includes(musteriSearch.toLowerCase()) // Aramaya göre filtreleme
+      )
+    : musteriler;
+
+  // Ürün arama fonksiyonu (ürün kodu ile)
+  const filteredUrunler = urunSearch
+    ? urunler.filter((urun) =>
+        urun.id.toString().includes(urunSearch) // Ürün kodu üzerinden arama yapıyoruz
+      )
+    : urunler;
 
   // Fiyat hesaplama fonksiyonu
   const handleFiyatHesapla = () => {
@@ -52,6 +71,17 @@ const TeklifVer = ({ isSidebarOpen }) => {
         <CardContent>
           <Typography variant="h6">Teklif Bilgileri</Typography>
 
+          {/* Müşteri Arama */}
+          <TextField
+            label="Müşteri Ara"
+            fullWidth
+            variant="outlined"
+            size="small"
+            value={musteriSearch} // Arama kutusuna yazdığınız metin görünecek
+            onChange={(e) => setMusteriSearch(e.target.value)} // Arama metnini güncelle
+            style={{ marginBottom: "10px" }}
+          />
+          
           {/* Müşteri Seçimi */}
           <TextField
             select
@@ -63,17 +93,28 @@ const TeklifVer = ({ isSidebarOpen }) => {
             onChange={(e) => setSecilenMusteri(e.target.value)}
             style={{ marginBottom: "10px" }}
           >
-            {musteriler.map((musteri) => (
+            {filteredMusteriler.map((musteri) => (
               <MenuItem key={musteri.id} value={musteri.id}>
                 {musteri.adSoyad}
               </MenuItem>
             ))}
           </TextField>
 
+          {/* Ürün Arama */}
+          <TextField
+            label="Ürün Ara (Ürün Kodu)"
+            fullWidth
+            variant="outlined"
+            size="small"
+            value={urunSearch} // Ürün arama kısmında yazdığınız metin görünecek
+            onChange={(e) => setUrunSearch(e.target.value)} // Ürün arama metnini güncelle
+            style={{ marginBottom: "10px" }}
+          />
+          
           {/* Ürün Seçimi */}
           <TextField
             select
-            label="Ürün kodu"
+            label="Ürün Seç"
             fullWidth
             variant="outlined"
             size="small"
@@ -81,9 +122,9 @@ const TeklifVer = ({ isSidebarOpen }) => {
             onChange={(e) => setSecilenUrun(e.target.value)}
             style={{ marginBottom: "10px" }}
           >
-            {urunler.map((urun) => (
+            {filteredUrunler.map((urun) => (
               <MenuItem key={urun.id} value={urun.id}>
-                {urun.id}
+                {urun.id} - {urun.ad}
               </MenuItem>
             ))}
           </TextField>

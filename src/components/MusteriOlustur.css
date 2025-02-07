@@ -1,4 +1,14 @@
-.musteri-olustur-container {
+/* Body ve html için margin ve padding sıfırlama */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f0f0f0; /* Genel gri arka plan */
+  }
+  
+  /* Sayfa Arka Planı */
+  .musteri-olustur-container {
     transition: all 0.3s ease-in-out;
     padding: 20px;
     display: flex;
@@ -6,30 +16,35 @@
     align-items: center;     /* Dikeyde ortalanma */
     height: 100vh;           /* Sayfanın tam yüksekliği */
     width: 100%;             /* Sayfa genişliği */
+    background-color: #f0f0f0; /* Arka Planı Gri Yap */
+    overflow: hidden; /* Taşan içerikler varsa onları gizler */
   }
   
+  /* Sidebar açıkken sağa kayacak */
   .musteri-olustur-container.open {
-    margin-left: 300px; /* Sidebar açıkken sağa kayacak */
+    margin-left: 300px; 
   }
   
+  /* Sidebar kapalıyken sola kayacak */
   .musteri-olustur-container.closed {
-    margin-left: 60px; /* Sidebar kapalıyken sola kayacak */
+    margin-left: 60px; 
   }
   
-  /* Kartı daha küçük ve sayfanın ortasında yapmak için max-width ve padding ayarları */
+  /* Kartın düzenini ve büyüklüğünü ayarlıyoruz */
   .mui-card {
-    max-width: 500px;   /* Kartın genişliği */
-    width: 100%;        /* Kart genişliğini %100 yaparak ekranın boyutuna uyum sağla */
-    margin: 20px 0;     /* Üstten ve alttan boşluk */
+    max-width: 500px;  /* Kartın genişliği */
+    width: 100%;       /* Kart genişliğini %100 yaparak ekranın boyutuna uyum sağla */
+    margin: 20px 0;    /* Üstten ve alttan boşluk */
   }
   
-  /* Butonun üst kısmındaki konumlandırma */
+  /* Buton stilini buraya ekliyoruz */
   button {
     background-color: orange;
     color: white;
     margin-top: 20px;
   }
   
+  /* Başlık stilini ayarlıyoruz */
   .musteri-olustur-container h1 {
     text-align: center;  /* Başlık ortalanacak */
     font-size: 24px;
