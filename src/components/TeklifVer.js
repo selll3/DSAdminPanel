@@ -1,220 +1,269 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, Typography, TextField, Button, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
-import "./TeklifVer.css"; 
+import React, { useState } from "react";
+import Select from "react-select";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+import "./TeklifVer.css";
 
-const TeklifVer = ({ isSidebarOpen }) => {
-  const [musteriler, setMusteriler] = useState([]);
-  const [urunler, setUrunler] = useState([]);
-  const [secilenMusteri, setSecilenMusteri] = useState("");
-  const [secilenUrun, setSecilenUrun] = useState("");
-  const [adet, setAdet] = useState("");
-  const [fiyat, setFiyat] = useState("");
-  const [musteriSearch, setMusteriSearch] = useState("");
-  const [urunSearch, setUrunSearch] = useState("");
-  const [eskiFiyat, setEskiFiyat] = useState("");
-  const [yeniFiyat, setYeniFiyat] = useState("");
-  const [openDialog, setOpenDialog] = useState(false);
-  const [tempYeniFiyat, setTempYeniFiyat] = useState("");
+// Mevcut müşteri ve ürün verileri
+const Musteriler = [
+  { label: "Ahmet Yılmaz", value: "Ahmet Yılmaz" },
+  { label: "Mehmet Kaya", value: "Mehmet Kaya" },
+  { label: "Ayşe Demir", value: "Ayşe Demir" },
+  // Diğer müşteriler...
+];
 
-  useEffect(() => {
-    setMusteriler([
-      { id: 1, adSoyad: "Ahmet Yılmaz" },
-      { id: 2, adSoyad: "Mehmet Kaya" },
-      { id: 3, adSoyad: "Mehmet Demir" },
-      { id: 4, adSoyad: "Ahmet Çelik" }
-    ]);
+const Urunler = [
+  { kod: "UR001", cins: "Demir Boru", dvz: "TL", fiyat: 150, isk: 10, marka: "X", teslim: "7 Gün" },
+  { kod: "UR002", cins: "Bakır Tel", dvz: "USD", fiyat: 200, isk: 5, marka: "Y", teslim: "10 Gün" },
+  // Diğer ürünler...
+];
 
-    setUrunler([
-      { id: 101, ad: "Laptop", fiyat: 15000, stok: 5 },
-      { id: 102, ad: "Telefon", fiyat: 8000, stok: 10 },
-      { id: 103, ad: "Tablet", fiyat: 6000, stok: 7 }
-    ]);
-  }, []);
+const TeklifVer = () => {
+  const [musteri, setMusteri] = useState(null); // Müşteri
+  const [urun, setUrun] = useState(null); // Seçilen ürün
+  const [miktar, setMiktar] = useState(1); // Miktar
+  const [birimFiyat, setBirimFiyat] = useState(0); // Birim fiyat
+  const [urunlerTablo, setUrunlerTablo] = useState([]); // Ürün tablosu
+  const [teklifTarihi, setTeklifTarihi] = useState(new Date().toISOString().split("T")[0]); // Teklif tarihi
+  const [gecerlilikTarihi, setGecerlilikTarihi] = useState(new Date().toISOString().split("T")[0]); // Geçerlilik tarihi
+  const [teklifSaati, setTeklifSaati] = useState("12:00"); // Teklif saati
 
-  const filteredMusteriler = musteriSearch
-    ? musteriler.filter((musteri) =>
-        musteri.adSoyad.toLowerCase().includes(musteriSearch.toLowerCase())
-      )
-    : musteriler;
+  // Müşteri seçimi
+  const musteriSec = (selectedOption) => {
+    setMusteri(selectedOption);
+  };
 
-  const filteredUrunler = urunSearch
-    ? urunler.filter((urun) => urun.id.toString().includes(urunSearch))
-    : urunler;
-
-  useEffect(() => {
-    if (secilenUrun) {
-      const urun = urunler.find((u) => u.id === parseInt(secilenUrun));
-      if (urun) {
-        setEskiFiyat(urun.fiyat);
-        setYeniFiyat(""); 
-      }
+  // Ürün seçimi
+  const urunSec = (selectedOption) => {
+    if (selectedOption) {
+      const secilenUrun = Urunler.find((u) => u.kod === selectedOption.value);
+      setUrun(secilenUrun);
+      setBirimFiyat(secilenUrun ? secilenUrun.fiyat : 0);
+    } else {
+      setUrun(null);
+      setBirimFiyat(0);
     }
-  }, [secilenUrun]);
+  };
+  
+  // Ürün ekleme
+  const urunEkle = () => {
+    if (!urun) return;
+    const yeniUrun = {
+      kod: urun.kod,
+      cins: urun.cins,
+      dvz: urun.dvz,
+      fiyat: urun.fiyat,
+      isk: urun.isk,
+      marka: urun.marka,
+      teslim: urun.teslim,
+      miktar: miktar,
+      birimFiyat: birimFiyat,
+      tutar: miktar * birimFiyat
+    };
+    setUrunlerTablo([...urunlerTablo, yeniUrun]);
+  };
 
-  const handleFiyatDegistir = () => {
-    if (!secilenUrun) {
-      alert("Lütfen önce bir ürün seçin!");
+  // PDF oluşturma
+  const handleGeneratePDF = () => {
+    if (urunlerTablo.length === 0) {
+      alert("Tablo verisi bulunamadı! Lütfen önce ürün ekleyin.");
       return;
     }
-    setOpenDialog(true);
+    generatePDF(urunlerTablo);
   };
+  
+  const generatePDF = (tableData) => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    doc.setFont('Arial');
 
-  const handleDialogClose = (confirm) => {
-    if (confirm) {
-      setYeniFiyat(tempYeniFiyat);
-    }
-    setTempYeniFiyat("");
-    setOpenDialog(false);
-  };
-
-  const handleFiyatHesapla = () => {
-    const urun = urunler.find((u) => u.id === parseInt(secilenUrun));
-    if (urun) {
-      const fiyatKaynak = yeniFiyat ? parseInt(yeniFiyat) : urun.fiyat;
-      if (parseInt(adet) > urun.stok) {
-        alert("Yetersiz stok!");
-      } else {
-        setFiyat(fiyatKaynak * parseInt(adet));
-      }
-    }
-  };
-
-  const handleTeklifVer = () => {
-    if (!secilenMusteri || !secilenUrun || !adet || !fiyat) {
-      alert("Lütfen tüm alanları doldurun!");
-      return;
-    }
-    alert(`Teklif Oluşturuldu! 
-    Müşteri: ${secilenMusteri}, 
-    Ürün: ${secilenUrun}, 
-    Adet: ${adet}, 
-    Birim Fiyat: ${yeniFiyat || eskiFiyat}, 
-    Toplam Fiyat: ${fiyat}`);
+    // Şirket Bilgileri
+    doc.setFontSize(10);
+    doc.text("Şirket Adı", 15, 15);
+    doc.text("Şirket Adı Devamı", 15, 20);
+    doc.text("Açık Adres", 15, 25);
+    doc.text("Gebze / Kocaeli", 15, 30);
+    doc.text("Telefon Numarası", 15, 35);
+    doc.text(`FİRMA: ${musteri.label}`, 15, 40);
+    doc.text("SN:", 15, 45);
+  
+    // Sol Üstte Logo
+    doc.addImage("Demse_Ymza_Logo.png", "PNG", 85, 10, 40, 15);
+  
+    // Teklifimizdir Yazısı
+    doc.setFontSize(14);
+    doc.text("Teklifimizdir", 105, 50, { align: "center" });
+  
+    // Teklif Bilgileri (Tarih vs.)
+    doc.setFontSize(10);
+    doc.addImage("Demse_Ymza_Logo.png", "PNG", 150, 10, 40, 15);
+    doc.text(`Teklif Tarihi: ${new Date(teklifTarihi).toLocaleDateString()} `, 150, 30);
+    doc.text(`Geçerlilik Tarihi: ${new Date(gecerlilikTarihi).toLocaleDateString()}`, 150, 35);
+  
+    // Ürün Tablosu
+    const columns = [
+      "Sıra No", "Stok Kodu", "Malzeme Cinsi", "DVZ", "Liste Fiyatı", 
+      "ISK", "Marka", "Teslim", "MİK", "BR", "Birim Fiyat", "Tutar"
+    ];
+  
+    const rows = tableData.map((item, index) => [
+      index + 1, 
+      item.kod, 
+      item.cins, 
+      item.dvz, 
+      item.fiyat, 
+      item.isk, 
+      item.marka, 
+      item.teslim, 
+      item.miktar, 
+      "-",  
+      item.birimFiyat, 
+      item.tutar
+    ]);
+  
+    doc.autoTable({
+      startY: 60,
+      head: [columns],
+      body: rows,
+      theme: "grid",
+      styles: { font: "Lora", fontSize: 10, cellPadding: 2 },
+      headStyles: { fillColor: [200, 200, 200] },
+    });
+  
+    // Toplamlar
+    let finalY = doc.lastAutoTable.finalY + 10;
+    doc.text("Toplam TL:", 150, finalY);
+    doc.text("Toplam USD:", 150, finalY + 5);
+    doc.text("Toplam EURO:", 150, finalY + 10);
+    doc.text("Para Br:", 150, finalY + 20);
+    doc.text("TOPLAM:", 180, finalY + 20);
+    doc.text("KDV:", 180, finalY + 25);
+    doc.text("GENEL TOPLAM:", 180, finalY + 30);
+   
+    // PDF İndirme
+    doc.save("Teklif.pdf");
   };
 
   return (
-    <div className={`teklif-container ${isSidebarOpen ? "open" : "closed"}`}>
-      <h1>Teklif Ver</h1>
+    <div className="teklif-container">
+      <h2>Teklif Ver</h2>
 
-      <Card style={{ padding: "20px", background: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6">Teklif Bilgileri</Typography>
+      {/* Müşteri Seçimi */}
+      <div className="dropdown-container">
+        <label>Müşteri Seç:</label>
+        <Select
+          value={musteri}
+          onChange={musteriSec}
+          options={Musteriler}
+          getOptionLabel={(e) => e.label}
+          getOptionValue={(e) => e.value}
+          isClearable={true}
+          placeholder="Müşteri arayın..."
+        />
+      </div>
 
-          <TextField
-            label="Müşteri Ara"
-            fullWidth
-            variant="outlined"
-            size="small"
-            value={musteriSearch}
-            onChange={(e) => setMusteriSearch(e.target.value)}
-            style={{ marginBottom: "10px" }}
-          />
+      {/* Ürün Seçimi */}
+      <div className="dropdown-container">
+        <label>Ürün Seç:</label>
+        <Select
+          options={Urunler.map((urun) => ({ value: urun.kod, label: urun.kod + " - " + urun.cins }))}
+          onChange={urunSec}
+          value={urun ? { value: urun.kod, label: urun.kod + " - " + urun.cins } : null}
+        />
+      </div>
 
-          <TextField
-            select
-            label="Müşteri Seç"
-            fullWidth
-            variant="outlined"
-            size="small"
-            value={secilenMusteri}
-            onChange={(e) => setSecilenMusteri(e.target.value)}
-            style={{ marginBottom: "20px" }}
-          >
-            {filteredMusteriler.map((musteri) => (
-              <MenuItem key={musteri.id} value={musteri.id}>
-                {musteri.adSoyad}
-              </MenuItem>
+      {/* Teklif Tarihi ve Geçerlilik Tarihi Seçimi */}
+      <div className="dropdown-container">
+        <label>Teklif Tarihi:</label>
+        <input
+          type="date"
+          value={teklifTarihi}
+          onChange={(e) => setTeklifTarihi(e.target.value)}
+          min={new Date().toISOString().split("T")[0]} // Bugünden önceki tarihleri engelle
+        />
+      </div>
+
+      <div className="dropdown-container">
+        <label>Geçerlilik Tarihi:</label>
+        <input
+          type="date"
+          value={gecerlilikTarihi}
+          onChange={(e) => setGecerlilikTarihi(e.target.value)}
+          min={new Date().toISOString().split("T")[0]} // Bugünden önceki tarihleri engelle
+        />
+      </div>
+
+     
+      {/* Seçilen Ürün Bilgileri */}
+      {urun && (
+        <div className="urun-bilgileri">
+          <p><strong>Malzeme:</strong> {urun.cins}</p>
+          <p><strong>Döviz:</strong> {urun.dvz}</p>
+          <p><strong>Birim Fiyat:</strong> {urun.fiyat} TL</p>
+          <p><strong>İskonto:</strong> {urun.isk}%</p>
+          <p><strong>Marka:</strong> {urun.marka}</p>
+          <p><strong>Teslimat Süresi:</strong> {urun.teslim}</p>
+        </div>
+      )}
+
+      {/* Ürün Miktarı ve Birim Fiyatı */}
+      <div className="urun-miktar-birim-fiyat">
+        <label>Miktar:</label>
+        <input type="number" value={miktar} onChange={(e) => setMiktar(e.target.value)} min="1" />
+        <label>Birim Fiyat:</label>
+        <input
+          type="number"
+          value={birimFiyat}
+          onChange={(e) => setBirimFiyat(e.target.value)}
+          min="0"
+        />
+      </div>
+
+      {/* Ürün Ekleme Butonu */}
+      <button onClick={urunEkle}>Ürün Ekle</button>
+
+      {/* Ürünler Tablosu */}
+      <div className="urun-tablosu">
+        <h3>Ürünler Tablosu</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Sıra No</th>
+              <th>Stok Kodu</th>
+              <th>Malzeme Cinsi</th>
+              <th>DVZ</th>
+              <th>Liste Fiyatı</th>
+              <th>İskonto</th>
+              <th>Marka</th>
+              <th>Teslim</th>
+              <th>Miktar</th>
+              <th>Birim Fiyat</th>
+              <th>Tutar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {urunlerTablo.map((item, index) => (
+              <tr key={index}>
+                <td>{index + 1}</td>
+                <td>{item.kod}</td>
+                <td>{item.cins}</td>
+                <td>{item.dvz}</td>
+                <td>{item.fiyat}</td>
+                <td>{item.isk}</td>
+                <td>{item.marka}</td>
+                <td>{item.teslim}</td>
+                <td>{item.miktar}</td>
+                <td>{item.birimFiyat}</td>
+                <td>{item.tutar}</td>
+              </tr>
             ))}
-          </TextField>
+          </tbody>
+        </table>
+      </div>
 
-          <TextField
-            label="Ürün Ara (Ürün Kodu)"
-            fullWidth
-            variant="outlined"
-            size="small"
-            value={urunSearch}
-            onChange={(e) => setUrunSearch(e.target.value)}
-            style={{ marginBottom: "10px" }}
-          />
-
-          <TextField
-            select
-            label="Ürün Seç"
-            fullWidth
-            variant="outlined"
-            size="small"
-            value={secilenUrun}
-            onChange={(e) => setSecilenUrun(e.target.value)}
-            style={{ marginBottom: "10px" }}
-          >
-            {filteredUrunler.map((urun) => (
-              <MenuItem key={urun.id} value={urun.id}>
-                {urun.id} - {urun.ad}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          {secilenUrun && (
-            <div style={{ marginBottom: "20px" }}>
-              <Typography variant="body1">Eski Fiyat: {eskiFiyat}₺</Typography>
-              <Typography variant="body1">Yeni Fiyat: {yeniFiyat || "Değiştirilmedi"}</Typography>
-              <Button variant="outlined" onClick={handleFiyatDegistir}>
-                Birim Fiyatı Değiştir
-              </Button>
-            </div>
-          )}
-
-          <TextField
-            label="Adet"
-            fullWidth
-            variant="outlined"
-            size="small"
-            type="number"
-            value={adet}
-            onChange={(e) => setAdet(e.target.value)}
-            style={{ marginBottom: "10px" }}
-          />
-
-          <TextField
-            label="Fiyat"
-            fullWidth
-            variant="outlined"
-            size="small"
-            value={fiyat}
-            disabled
-            style={{ marginBottom: "20px" }}
-          />
-
-          <div className="button-container">
-            <Button variant="contained" color="primary" onClick={handleFiyatHesapla}>
-              Fiyat Hesapla
-            </Button>
-
-            <Button variant="contained" style={{ backgroundColor: "orange", color: "white" }} onClick={handleTeklifVer}>
-              Teklif Ver
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Dialog open={openDialog} onClose={() => handleDialogClose(false)}>
-        <DialogTitle>Fiyatı Değiştir</DialogTitle>
-        <DialogContent>
-          <DialogContentText>Yeni birim fiyatı girin:</DialogContentText>
-          <TextField
-            fullWidth
-            variant="outlined"
-            size="small"
-            type="number"
-            value={tempYeniFiyat}
-            onChange={(e) => setTempYeniFiyat(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => handleDialogClose(false)}>Vazgeç</Button>
-          <Button onClick={() => handleDialogClose(true)} color="primary">Evet</Button>
-        </DialogActions>
-      </Dialog>
+      {/* PDF ve Kaydet Butonları */}
+      <div className="button-container">
+        <button onClick={handleGeneratePDF}>Teklifi PDF'e Dönüştür</button>
+      </div>
     </div>
   );
 };

@@ -18,11 +18,18 @@
     "@mui/base": "^5.0.0-beta.69",
     "@mui/icons-material": "^6.4.2",
     "@mui/material": "^6.4.2",
+    "@shadcn/ui": "^0.0.4",
     "axios": "^1.7.9",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
     "react": "^19.0.0",
+    "react-datepicker": "^8.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.1",
-    "react-scripts": "^5.0.1"
+    "react-scripts": "^5.0.1",
+    "react-select": "^5.10.0",
+    "react-to-print": "^3.0.5"
   },
   "browserslist": {
     "production": [

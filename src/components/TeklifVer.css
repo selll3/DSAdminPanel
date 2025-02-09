@@ -1,19 +1,42 @@
 .teklif-container {
-    position: absolute;
-    top: 0;
-    left: 300px;
-    width: calc(100% - 300px);
-    transition: all 0.3s ease-in-out;
-    padding: 20px;
-  }
-  
-  .teklif-container.closed {
-    left: 40px !important;
-    width: calc(100% - 80px) !important;
-  }
-  
-  .button-container {
-    display: flex;
-    justify-content: space-between;
-  }
-  
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.dropdown-container {
+  margin-bottom: 15px;
+}
+
+.urun-tablosu {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.button-container {
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
