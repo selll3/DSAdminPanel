@@ -27,6 +27,7 @@ const TeklifVer = () => {
   const [teklifTarihi, setTeklifTarihi] = useState(new Date().toISOString().split("T")[0]); // Teklif tarihi
   const [gecerlilikTarihi, setGecerlilikTarihi] = useState(new Date().toISOString().split("T")[0]); // Geçerlilik tarihi
   const [teklifSaati, setTeklifSaati] = useState("12:00"); // Teklif saati
+  const [kdvOrani, setKdvOrani] = useState(18); // KDV oranı
 
   // Müşteri seçimi
   const musteriSec = (selectedOption) => {
@@ -44,7 +45,7 @@ const TeklifVer = () => {
       setBirimFiyat(0);
     }
   };
-  
+
   // Ürün ekleme
   const urunEkle = () => {
     if (!urun) return;
@@ -63,7 +64,34 @@ const TeklifVer = () => {
     setUrunlerTablo([...urunlerTablo, yeniUrun]);
   };
 
-  // PDF oluşturma
+  // Toplam hesaplaması
+  const calculateTotals = () => {
+    let toplamTL = 0;
+    let toplamUSD = 0;
+    let toplamEURO = 0;
+
+    urunlerTablo.forEach((item) => {
+      if (item.dvz === "TL") {
+        toplamTL += item.tutar;
+      } else if (item.dvz === "USD") {
+        toplamUSD += item.tutar;
+      } else if (item.dvz === "EURO") {
+        toplamEURO += item.tutar;
+      }
+    });
+
+    const kdv = (toplamTL * kdvOrani) / 100;
+    const genelToplam = toplamTL + kdv;
+
+    return {
+      toplamTL,
+      toplamUSD,
+      toplamEURO,
+      kdv,
+      genelToplam,
+    };
+  };
+
   const handleGeneratePDF = () => {
     if (urunlerTablo.length === 0) {
       alert("Tablo verisi bulunamadı! Lütfen önce ürün ekleyin.");
@@ -71,7 +99,7 @@ const TeklifVer = () => {
     }
     generatePDF(urunlerTablo);
   };
-  
+
   const generatePDF = (tableData) => {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     doc.setFont('Arial');
@@ -85,41 +113,41 @@ const TeklifVer = () => {
     doc.text("Telefon Numarası", 15, 35);
     doc.text(`FİRMA: ${musteri.label}`, 15, 40);
     doc.text("SN:", 15, 45);
-  
+
     // Sol Üstte Logo
     doc.addImage("Demse_Ymza_Logo.png", "PNG", 85, 10, 40, 15);
-  
+
     // Teklifimizdir Yazısı
     doc.setFontSize(14);
     doc.text("Teklifimizdir", 105, 50, { align: "center" });
-  
+
     // Teklif Bilgileri (Tarih vs.)
     doc.setFontSize(10);
     doc.addImage("Demse_Ymza_Logo.png", "PNG", 150, 10, 40, 15);
     doc.text(`Teklif Tarihi: ${new Date(teklifTarihi).toLocaleDateString()} `, 150, 30);
     doc.text(`Geçerlilik Tarihi: ${new Date(gecerlilikTarihi).toLocaleDateString()}`, 150, 35);
-  
+
     // Ürün Tablosu
     const columns = [
-      "Sıra No", "Stok Kodu", "Malzeme Cinsi", "DVZ", "Liste Fiyatı", 
+      "Sıra No", "Stok Kodu", "Malzeme Cinsi", "DVZ", "Liste Fiyatı",
       "ISK", "Marka", "Teslim", "MİK", "BR", "Birim Fiyat", "Tutar"
     ];
-  
+
     const rows = tableData.map((item, index) => [
-      index + 1, 
-      item.kod, 
-      item.cins, 
-      item.dvz, 
-      item.fiyat, 
-      item.isk, 
-      item.marka, 
-      item.teslim, 
-      item.miktar, 
-      "-",  
-      item.birimFiyat, 
+      index + 1,
+      item.kod,
+      item.cins,
+      item.dvz,
+      item.fiyat,
+      item.isk,
+      item.marka,
+      item.teslim,
+      item.miktar,
+      "-",
+      item.birimFiyat,
       item.tutar
     ]);
-  
+
     doc.autoTable({
       startY: 60,
       head: [columns],
@@ -128,17 +156,16 @@ const TeklifVer = () => {
       styles: { font: "Lora", fontSize: 10, cellPadding: 2 },
       headStyles: { fillColor: [200, 200, 200] },
     });
-  
+
     // Toplamlar
+    const totals = calculateTotals();
     let finalY = doc.lastAutoTable.finalY + 10;
-    doc.text("Toplam TL:", 150, finalY);
-    doc.text("Toplam USD:", 150, finalY + 5);
-    doc.text("Toplam EURO:", 150, finalY + 10);
-    doc.text("Para Br:", 150, finalY + 20);
-    doc.text("TOPLAM:", 180, finalY + 20);
-    doc.text("KDV:", 180, finalY + 25);
-    doc.text("GENEL TOPLAM:", 180, finalY + 30);
-   
+    doc.text(`Toplam TL: ${totals.toplamTL.toFixed(2)} TL`, 150, finalY);
+    doc.text(`Toplam USD: ${totals.toplamUSD.toFixed(2)} USD`, 150, finalY + 5);
+    doc.text(`Toplam EURO: ${totals.toplamEURO.toFixed(2)} EURO`, 150, finalY + 10);
+    doc.text(`KDV (${kdvOrani}%): ${totals.kdv.toFixed(2)} TL`, 150, finalY + 20);
+    doc.text(`GENEL TOPLAM: ${totals.genelToplam.toFixed(2)} TL`, 150, finalY + 30);
+
     // PDF İndirme
     doc.save("Teklif.pdf");
   };
@@ -165,14 +192,13 @@ const TeklifVer = () => {
       <div className="dropdown-container">
         <label>Ürün Seç:</label>
         <Select
-          options={Urunler.map((urun) => ({ value: urun.kod, label: urun.kod + " - " + urun.cins }))}
-          onChange={urunSec}
-          value={urun ? { value: urun.kod, label: urun.kod + " - " + urun.cins } : null}
+          options={Urunler.map((urun) => ({ value: urun.kod, label: urun.kod + " - " + urun.cins }))} 
+          onChange={urunSec} 
+          value={urun ? { value: urun.kod, label: urun.kod + " - " + urun.cins } : null} 
         />
       </div>
-
-      {/* Teklif Tarihi ve Geçerlilik Tarihi Seçimi */}
-      <div className="dropdown-container">
+ {/* Teklif Tarihi ve Geçerlilik Tarihi Seçimi */}
+ <div className="dropdown-container">
         <label>Teklif Tarihi:</label>
         <input
           type="date"
@@ -191,9 +217,7 @@ const TeklifVer = () => {
           min={new Date().toISOString().split("T")[0]} // Bugünden önceki tarihleri engelle
         />
       </div>
-
-     
-      {/* Seçilen Ürün Bilgileri */}
+      {/* Ürün ve Miktar Ekleme */}
       {urun && (
         <div className="urun-bilgileri">
           <p><strong>Malzeme:</strong> {urun.cins}</p>
@@ -260,8 +284,13 @@ const TeklifVer = () => {
         </table>
       </div>
 
-      {/* PDF ve Kaydet Butonları */}
+      {/* Toplamlar ve PDF Üret */}
       <div className="button-container">
+        <p><strong>Toplam TL:</strong> {calculateTotals().toplamTL.toFixed(2)} TL</p>
+        <p><strong>Toplam USD:</strong> {calculateTotals().toplamUSD.toFixed(2)} USD</p>
+        <p><strong>Toplam EURO:</strong> {calculateTotals().toplamEURO.toFixed(2)} EURO</p>
+        <p><strong>KDV:</strong> {calculateTotals().kdv.toFixed(2)} TL</p>
+        <p><strong>GENEL TOPLAM:</strong> {calculateTotals().genelToplam.toFixed(2)} TL</p>
         <button onClick={handleGeneratePDF}>Teklifi PDF'e Dönüştür</button>
       </div>
     </div>
