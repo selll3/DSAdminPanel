@@ -79,15 +79,17 @@ const TeklifVer = () => {
         toplamEURO += item.tutar;
       }
     });
+    const toplamdvz = toplamTL+toplamEURO+toplamUSD;
+    const kdv = (toplamdvz * kdvOrani) / 100;
 
-    const kdv = (toplamTL * kdvOrani) / 100;
-    const genelToplam = toplamTL + kdv;
-
+    const genelToplam = toplamdvz + kdv;
+    
     return {
       toplamTL,
       toplamUSD,
       toplamEURO,
       kdv,
+      toplamdvz,
       genelToplam,
     };
   };
@@ -99,11 +101,11 @@ const TeklifVer = () => {
     }
     generatePDF(urunlerTablo);
   };
-
+  const logoUrl= "Demse_Ymza_Logo.png";
   const generatePDF = (tableData) => {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     doc.setFont('Arial');
-
+  
     // Şirket Bilgileri
     doc.setFontSize(10);
     doc.text("Şirket Adı", 15, 15);
@@ -126,7 +128,7 @@ const TeklifVer = () => {
     doc.addImage("Demse_Ymza_Logo.png", "PNG", 150, 10, 40, 15);
     doc.text(`Teklif Tarihi: ${new Date(teklifTarihi).toLocaleDateString()} `, 150, 30);
     doc.text(`Geçerlilik Tarihi: ${new Date(gecerlilikTarihi).toLocaleDateString()}`, 150, 35);
-
+    
     // Ürün Tablosu
     const columns = [
       "Sıra No", "Stok Kodu", "Malzeme Cinsi", "DVZ", "Liste Fiyatı",
@@ -159,12 +161,49 @@ const TeklifVer = () => {
 
     // Toplamlar
     const totals = calculateTotals();
-    let finalY = doc.lastAutoTable.finalY + 10;
-    doc.text(`Toplam TL: ${totals.toplamTL.toFixed(2)} TL`, 150, finalY);
-    doc.text(`Toplam USD: ${totals.toplamUSD.toFixed(2)} USD`, 150, finalY + 5);
-    doc.text(`Toplam EURO: ${totals.toplamEURO.toFixed(2)} EURO`, 150, finalY + 10);
-    doc.text(`KDV (${kdvOrani}%): ${totals.kdv.toFixed(2)} TL`, 150, finalY + 20);
-    doc.text(`GENEL TOPLAM: ${totals.genelToplam.toFixed(2)} TL`, 150, finalY + 30);
+    let finalY = doc.lastAutoTable.finalY +10;
+    // doc.text(`Toplam TL: ${totals.toplamTL.toFixed(2)} TL`, 150, finalY);
+    // doc.text(`Toplam USD: ${totals.toplamUSD.toFixed(2)} USD`, 150, finalY + 5);
+    // doc.text(`Toplam EURO: ${totals.toplamEURO.toFixed(2)} EURO`, 150, finalY + 10);
+    // doc.text(`KDV (${kdvOrani}%): ${totals.kdv.toFixed(2)} TL`, 150, finalY + 20);
+    // doc.text(`GENEL TOPLAM: ${totals.genelToplam.toFixed(2)} TL`, 150, finalY + 30);
+  
+    const totalRows = [
+      [ "","", "TOPLAM TL", totals.toplamTL.toFixed(2) + " TL"],
+      [ "","", "TOPLAM USD", totals.toplamUSD.toFixed(2) + " USD"],
+      [ "","", "TOPLAM EURO", totals.toplamEURO.toFixed(2) + " EURO"],
+      [ "","Para Birimi", "TOPLAM ", totals.toplamdvz.toFixed(2) + ""],
+      [ "Teklif açıklamaları:","TL", "KDV (" + kdvOrani + "%)", totals.kdv.toFixed(2) + " TL"],
+      [ "","","GENEL TOPLAM", totals.genelToplam.toFixed(2) + " TL"]
+    ];
+    doc.autoTable({
+     
+      startY: finalY,
+      body: totalRows,
+      theme: "grid",
+      styles: { 
+        fontSize: 8, 
+        cellPadding: 2,
+      },
+      headStyles: { fillColor: [200, 200, 200] },
+      columnStyles: {
+        0: { cellWidth: 120,lineWidth: 0}, // En sol sütun çizgisi aktif
+        1: { cellWidth: 22 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 20 },
+      },
+      didDrawCell: function (data) {
+        // 0. sütundaki ilk satıra logo ekle
+        if (data.column.index === 0 && data.row.index === 1) {
+          // Logo ekleme işlemi
+          doc.addImage(logoUrl, 'PNG', data.cell.x + 2, data.cell.y + 2, 60, 5); // Koordinatlar ve boyut
+        }
+        
+        
+        
+      },
+    });
+    
 
     // PDF İndirme
     doc.save("Teklif.pdf");
