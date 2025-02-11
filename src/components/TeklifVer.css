@@ -1,42 +1,221 @@
+/* Genel Sayfa Düzeni */
 .teklif-container {
-  width: 100%;
+ 
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 20px auto;
   padding: 20px;
+  position: absolute;
+  top: 0;
+  left: 500px; /* Sidebar açıkken daha fazla sağa kayacak */
+  width: calc(100% - 300px); /* Sayfanın genişliği ayarlandı */
+  transition: all 0.3s ease-in-out;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.teklif-container.closed {
+  left: 200px !important; /* Sidebar kapalıyken */
+  width: calc(100% - 80px) !important;
+}
+h2 {
+  text-align: center;
+  color: #333;
 }
 
+/* Dropdown Menü ve Input Alanları */
 .dropdown-container {
   margin-bottom: 15px;
 }
 
-.urun-tablosu {
-  margin-top: 20px;
-  overflow-x: auto;
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
 }
 
-table {
+input,
+select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Ürün Bilgileri */
+.urun-bilgileri p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+/* Ürün Miktar ve Fiyat */
+.urun-miktar-birim-fiyat {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.urun-miktar-birim-fiyat input {
+  width: 50%;
+}
+
+/* Ürünler Tablosu */
+.urun-tablosu {
+  min-height: 250px; /* Boşken de görünmesi için */
+  max-height: 300px; /* Çok fazla ürün eklenirse taşmayı önler */
+  overflow-y: auto; /* Dikey kaydırma çubuğu ekler */
+  margin-top: 10px;
+  background: white;
+  border-radius: 5px;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.urun-tablosu table {
   width: 100%;
   border-collapse: collapse;
 }
 
-th, td {
+.urun-tablosu th,
+.urun-tablosu td {
   border: 1px solid #ddd;
   padding: 8px;
-  text-align: left;
+  text-align: center;
+}
+
+.urun-tablosu th {
+  background: #568bc5;
+  color: white;
+}
+
+.toplam-container {
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.toplam-container p {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin: 5px 0;
 }
 
 .button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   margin-top: 20px;
 }
-
-button {
-  padding: 10px 20px;
-  background-color: #4CAF50;
+.urun-ekle-btn {
+  display: block; /* Butonu blok seviyesine alır */
+  margin: 0 auto; /* Yatayda ortalar */
+  padding: 12px 20px;
+  font-size: 16px;
+  background: #28a745;
   color: white;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  width: 250px;
+  text-align: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+.urun-sil-btn {
+  
+ 
+  font-size: 16px;
+  background: #d73f3f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  width: 60px;
+  text-align: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+.button-container button{
+  background: #efa357;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  width: 250px;
+  text-align: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-button:hover {
-  background-color: #45a049;
+.button-container button:hover,
+.urun-ekle-btn:hover,
+.urun-sil-btn:hover {
+  background: #218838;
+  transform: scale(1.05);
+}
+.urun-ve-tarih {
+  display: flex;
+  gap: 15px; /* Elemanlar arasına boşluk bırak */
+  align-items: center; /* Dikeyde hizalama */
+  margin-bottom: 15px;
+}
+
+.urun-secim {
+  flex: 2; /* Ürün seçim alanı daha büyük olsun */
+}
+
+.tarih-secim {
+  flex: 1; /* Tarih giriş kutuları daha küçük olsun */
+}
+
+.urun-secim select,
+.tarih-secim input {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.urun-miktar-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 eşit sütun oluşturur */
+  gap: 10px;
+  width: 100%; /* Tüm genişliği kaplar */
+}
+
+.urun-miktar-container label {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+  text-align: center; /* Başlığı ortalar */
+}
+
+.urun-miktar-container input {
+  padding: 8px;
+  width: 100%; /* Genişlik tüm alanı kaplasın */
+  box-sizing: border-box; /* Taşmayı önler */
+  text-align: center; /* Kullanıcının girdiği değeri ortalar */
+}
+
+
+
+/* Kartın Aşağı Taşmasını Önleme */
+.teklif-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: 80vh; /* Kartın aşırı uzamasını önler */
+  overflow-y: auto; /* Eğer içerik çok fazla olursa kaydırma çubuğu ekler */
 }

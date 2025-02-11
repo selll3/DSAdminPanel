@@ -4,7 +4,7 @@ html, body {
     padding: 0;
     width: 100%;
     height: 100%;
-    background-color: #f0f0f0; /* Genel gri arka plan */
+    background-color: #ffffff; /* Genel gri arka plan */
   }
   
   /* Sayfa Arka Planı */
@@ -16,7 +16,7 @@ html, body {
     align-items: center;     /* Dikeyde ortalanma */
     height: 100vh;           /* Sayfanın tam yüksekliği */
     width: 100%;             /* Sayfa genişliği */
-    background-color: #f0f0f0; /* Arka Planı Gri Yap */
+    background-color: #ffffff; /* Arka Planı Gri Yap */
     overflow: hidden; /* Taşan içerikler varsa onları gizler */
   }
   
