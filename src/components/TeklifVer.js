@@ -13,15 +13,18 @@ const Musteriler = [
 ];
 
 const Urunler = [
-  { kod: "UR001", cins: "Demir Boru", dvz: "TL", fiyat: 150, isk: 10, marka: "X", teslim: "7 Gün" },
-  { kod: "UR002", cins: "Bakır Tel", dvz: "USD", fiyat: 200, isk: 5, marka: "Y", teslim: "10 Gün" },
+  { kod: "UR001", cins: "Demir Boru", dvz: "TL", fiyat: 150, isk: 10, marka: "X", teslim: "7 Gün",miktar:2 },
+  { kod: "UR002", cins: "Bakır Tel", dvz: "USD", fiyat: 200, isk: 5, marka: "Y", teslim: "10 Gün",miktar:4 },
+  { kod: "UR003", cins: "Demir Boru", dvz: "TL", fiyat: 150, isk: 10, marka: "X", teslim: "7 Gün",miktar:6 },
+  { kod: "UR004", cins: "Demir Boru", dvz: "TL", fiyat: 350, isk: 10, marka: "X", teslim: "8 Gün",miktar:8 },
+  { kod: "UR005", cins: "Bakır Tel", dvz: "TL", fiyat: 350, isk: 10, marka: "X", teslim: "8 Gün",miktar:8 },
   // Diğer ürünler...
 ];
 
 const TeklifVer = ({ isSidebarOpen }) => {
   const [musteri, setMusteri] = useState(null); // Müşteri
   const [urun, setUrun] = useState(null); // Seçilen ürün
-  const [miktar, setMiktar] = useState(1);
+  const [miktar, setMiktar] = useState(urun?.miktar || 1 );
 const [birimFiyat, setBirimFiyat] = useState(0);
 const [iskonto, setIskonto] = useState(urun?.isk || 0); // Varsayılan olarak ürünün iskonto değeri
 const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsayılan olarak ürünün teslim süresi
@@ -47,6 +50,7 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
       setBirimFiyat(secilenUrun ? secilenUrun.fiyat : 0);
       setIskonto(secilenUrun ? secilenUrun.isk:0);
       setTeslimSuresi(secilenUrun ? secilenUrun.teslim : "");
+      setMiktar(secilenUrun ? secilenUrun.miktar : 1);
     } else {
       setUrun(null);
       setBirimFiyat(0);
@@ -57,6 +61,17 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
   const urunEkle = () => {
     if (!urun) return;
     
+    // Kullanıcının eklemek istediği ürünün toplam miktarını hesapla
+    const mevcutToplamMiktar = urunlerTablo
+      .filter((item) => item.kod === urun.kod) // Aynı stok koduna sahip ürünleri bul
+      .reduce((toplam, item) => toplam + item.miktar, 0); // Toplam miktarı hesapla
+
+    // Eğer stok miktarını geçiyorsa eklemeyi engelle
+    if (mevcutToplamMiktar + miktar > urun.miktar) {
+      alert(`Bu üründen en fazla ${urun.miktar} adet ekleyebilirsiniz!`);
+      return;
+    }
+
     const yeniUrun = {
       kod: urun.kod,
       cins: urun.cins,
@@ -69,21 +84,24 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
       birimFiyat: birimFiyat,
       tutar: miktar * birimFiyat * (1 - iskonto / 100) // İskonto hesaplaması eklendi
     };
-  
+
     setUrunlerTablo([...urunlerTablo, yeniUrun]);
-  };
+};
+
   
   const urunSil = (index) => {
     const yeniUrunlerTablo = urunlerTablo.filter((_, idx) => idx !== index);
     setUrunlerTablo(yeniUrunlerTablo);
   };
-
+  let teklifKaydedildi = false;
   // Teklif kaydetme
   const teklifKaydet = () => {
+    
     if (!musteri || urunlerTablo.length === 0) {
       alert("Lütfen müşteri ve ürünleri seçin.");
       return;
     }
+
     const teklifVerisi = {
       musteri,
       urunlerTablo,
@@ -92,7 +110,9 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
       kdvOrani,
     };
     localStorage.setItem("teklif", JSON.stringify(teklifVerisi));
-    alert("Teklif başarıyla kaydedildi.");
+    teklifKaydedildi = true; // Teklif kaydedildiğini işaretle
+    alert("Teklif başarıyla kaydedildi. Artık PDF oluşturabilirsiniz.");
+
   };
   // Toplam hesaplaması
   const calculateTotals = () => {
@@ -123,13 +143,23 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
       genelToplam,
     };
   };
+  
 
+ 
+  
   const handleGeneratePDF = () => {
+    
     if (urunlerTablo.length === 0) {
       alert("Tablo verisi bulunamadı! Lütfen önce ürün ekleyin.");
       return;
     }
+    if (!teklifKaydedildi) {
+      alert("Önce teklifi kaydetmelisiniz!");
+      return;
+  }
     generatePDF(urunlerTablo);
+    alert("PDF başarıyla oluşturuldu!");
+
   };
   const logoUrl= "3Marka.png";
   const generatePDF = (tableData) => {
@@ -144,16 +174,16 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
    
     // Şirket Bilgileri
     doc.setFontSize(10);
-    doc.text("Şirket Adı", 15, 15);
-    doc.text("Şirket Adı Devamı", 15, 20);
-    doc.text("Açık Adres", 15, 25);
+    doc.text("Korona Endüstriyel Elektrik", 15, 15);
+    doc.text("Mühendislik San. Ve Tic A.Ş", 15, 20);
+    doc.text("Adres", 15, 25);
     doc.text("Gebze / Kocaeli", 15, 30);
     doc.text("Telefon Numarası", 15, 35);
     doc.text(`FİRMA: ${musteri.label}`, 15, 40);
     doc.text("SN:", 15, 45);
 
     // Sol Üstte Logo
-    doc.addImage("Demse_Ymza_Logo.png", "PNG", 85, 20, 40, 15);
+    doc.addImage("koronaorta.jpg", "JPG", 85, 5, 40, 40);
 
     // Teklifimizdir Yazısı
     doc.setFontSize(14);
@@ -161,7 +191,7 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
 
     // Teklif Bilgileri (Tarih vs.)
     doc.setFontSize(10);
-    doc.addImage("Demse_Ymza_Logo.png", "PNG", 150, 7, 40, 15);
+    doc.addImage("Koronaelektrik.png", "PNG", 149, 7, 40, 15);
     doc.text("İlgili", 150,25);
     doc.text(`Teklif Tarihi: ${new Date(teklifTarihi).toLocaleDateString()} `, 150, 30);
     doc.text(`Geçerlilik Tarihi: ${new Date(gecerlilikTarihi).toLocaleDateString()}`, 150, 35);
@@ -311,20 +341,40 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
           <p><strong>İskonto:</strong> {urun.isk}%</p>
           <p><strong>Marka:</strong> {urun.marka}</p>
           <p><strong>Teslimat Süresi:</strong> {urun.teslim}</p>
+          <p><strong>Miktar:</strong> {urun.miktar}</p>
         </div>
       )}
 
      {/* Ürün Miktarı, Birim Fiyat, İskonto ve Teslim Süresi */}
 <div className="urun-miktar-container">
-  <label>
-    Miktar:
-    <input 
-      type="number" 
-      value={miktar} 
-      onChange={(e) => setMiktar(e.target.value)} 
-      min="1" 
-    />
-  </label>
+<label>
+  Miktar:
+  <input 
+    type="number" 
+    value={miktar} 
+    onChange={(e) => {
+      const yeniMiktar = Number(e.target.value);
+      
+      // Eğer 'urun' tanımlı değilse (null veya undefined ise) kodu durdur.
+      if (!urun) {
+        alert("Lütfen önce bir ürün seçin!");
+        return;
+      }
+
+      // Kullanıcı stoktan fazla girerse uyarı ver.
+      if (yeniMiktar > urun.miktar) {
+        alert(`Stokta sadece ${urun.miktar} adet mevcut!`);
+        return;
+      }
+
+      setMiktar(yeniMiktar);
+    }} 
+    min="1" 
+    max={urun ? urun.miktar : 1} // Eğer 'urun' yoksa max değeri 1 olarak ayarla.
+  />
+</label>
+
+
 
   <label>
     Birim Fiyat:

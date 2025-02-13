@@ -178,14 +178,15 @@ select {
 
 .tarih-secim {
   flex: 1; /* Tarih giriş kutuları daha küçük olsun */
+  
 }
 
 .urun-secim select,
 .tarih-secim input {
-  width: 100%;
+  width: 95%;
   padding: 6px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
 .urun-miktar-container {
