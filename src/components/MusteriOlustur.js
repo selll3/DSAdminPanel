@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createMusteri } from "../api/api";
 import { TextField, Button, Card, CardContent, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom"; // Yönlendirme için kullanıyoruz
 import "./MusteriOlustur.css"; // Stil dosyası
@@ -12,18 +13,33 @@ const MusteriOlustur = ({ isSidebarOpen }) => {
   const [adres, setAdres] = useState(""); // Adres
 
   // Formu göndermek için gerekli fonksiyon
-  const handleMusteriOlustur = () => {
+  const handleMusteriOlustur = async () => {
     if (!adSoyad || !telefon || !email || !adres) {
       alert("Lütfen tüm alanları doldurun!");
       return;
     }
-
-    // Burada veritabanına kaydetme işlemi yapılabilir.
-    alert(`Müşteri oluşturuldu! ${adSoyad} - ${telefon} - ${email} - ${adres}`);
-    
-    // Başka bir sayfaya yönlendirme
-    navigate("/dashboard");
+  
+    const musteriData = {
+      ad_soyad_firma: adSoyad,  // Değişiklik: adSoyadFirma yerine ad_soyad_firma
+       telefon: telefon,
+       email: email,
+        adres: adres
+    };
+  
+    console.log("Gönderilen Müşteri Verisi:", musteriData); // Burada veriyi kontrol edebilirsiniz
+  
+    try {
+      const newMusteri = await createMusteri(musteriData);
+      alert(`Müşteri başarıyla oluşturuldu: ${newMusteri.adSoyadFirma}`);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error('Müşteri oluşturulamadı:', error);
+      alert("Müşteri oluşturulamadı. Lütfen tekrar deneyin.");
+    }
   };
+  
+  
+
 
   return (
     <div className={`musteri-olustur-container ${isSidebarOpen ? "open" : "closed"}`}>

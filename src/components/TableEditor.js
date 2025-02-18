@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from "react";
+import {getProducts } from "../api/api";
+import { addProduct } from "../api/api";
+import {  deleteProduct } from "../api/api";
+import {  updateProduct } from "../api/api";
 import {
   Table,
   TableBody,
@@ -19,7 +23,7 @@ const TableEditor = ({ isSidebarOpen }) => {
   const  columnNames = [
     "Ürün Kodu", "İsim", "DVZ", "Birim Fiyat", "İSK", "Marka", "Teslim", "Miktar", "Birim", 
     "Temin", "Birim Maliyet", "Kutu Miktarı", "Etiketler", "KDV", "Stok", "Ana kategori", 
-    "Stok kullanır", "Kritik stok miktarı", "Açıklama"
+    "Stok kullanır", "Kritik stok miktarı"
   ];
 
   const [tableData, setTableData] = useState([]);
@@ -30,15 +34,18 @@ const TableEditor = ({ isSidebarOpen }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = [
-        { col1: "95040", col2: "REL 60V DC SLIM TIP 6A/250VAC", col3: "EUR", col4: "10,58", col5: "", col6: "KLEMSAN", col7: "", col8: "", col9: "Ad", col10: "01-A Grubu", col11: "", col12: "10", col13: "", col14: "10", col15: "", col16: "20", col17: "", col18: "", col19: "" },
-        { col1: "95041", col2: "REL 24V DC SLIM TIP 6A/250VAC", col3: "EUR", col4: "10,58", col5: "", col6: "KLEMSAN", col7: "", col8: "", col9: "Ad", col10: "01-A Grubu", col11: "", col12: "10", col13: "", col14: "10", col15: "", col16: "20", col17: "", col18: "", col19: "Pazarlama stratejisi oluşturdu." },
-      ];
-      setTableData(data);
-      setFilteredData(data);
+      try {
+        const data = await getProducts(); // Backend'den verileri alıyoruz
+        setTableData(data);
+        setFilteredData(data);
+      } catch (error) {
+        console.error("Ürünler alınamadı:", error);
+      }
     };
+  
     fetchData();
   }, []);
+  
 
   // Arama işlemi
   const handleSearch = (e) => {
@@ -52,20 +59,43 @@ const TableEditor = ({ isSidebarOpen }) => {
   };
 
   // Yeni satır ekleme
-  const handleAddRow = () => {
+  const handleAddRow = async () => {
     if (!newRow.col1) return;
-    const newData = [...tableData, { id: Date.now(), ...newRow }];
-    setTableData(newData);
-    setFilteredData(newData);
-    setNewRow({});
+    try {
+      const newProduct = await addProduct(newRow); // Backend'e yeni ürün ekliyoruz
+      setTableData([...tableData, newProduct]); // Tabloya yeni ürün ekliyoruz
+      setFilteredData([...filteredData, newProduct]); // Filtrelenmiş verilere ekliyoruz
+      setNewRow({}); // Formu sıfırlıyoruz
+    } catch (error) {
+      console.error("Yeni ürün eklenemedi:", error);
+    }
   };
-
+  
+  const handleEditRow = async (id, updatedRow) => {
+    try {
+      const updatedProduct = await updateProduct(id, updatedRow); // Ürün güncelleniyor
+      const updatedData = tableData.map((row) =>
+        row.id === id ? updatedProduct : row
+      );
+      setTableData(updatedData); // Tabloyu güncelliyoruz
+      setFilteredData(updatedData); // Filtrelenmiş verileri güncelliyoruz
+    } catch (error) {
+      console.error("Ürün düzenlenemedi:", error);
+    }
+  };
+  
   // Satır silme
-  const handleDeleteRow = (id) => {
-    const updatedData = tableData.filter((row) => row.id !== id);
-    setTableData(updatedData);
-    setFilteredData(updatedData);
+  const handleDeleteRow = async (id) => {
+    try {
+      await deleteProduct(id); // Ürün siliniyor
+      const updatedData = tableData.filter((row) => row.id !== id); // Tabloyu güncelliyoruz
+      setTableData(updatedData);
+      setFilteredData(updatedData);
+    } catch (error) {
+      console.error("Ürün silinemedi:", error);
+    }
   };
+  
 
   return (
     <div className={`table-container ${isSidebarOpen ? "open" : "closed"}`}>
@@ -123,7 +153,11 @@ const TableEditor = ({ isSidebarOpen }) => {
                 ))}
                 <TableCell>
                   <div style={{ display: "flex", gap: "5px" }}>
-                    <Button variant="contained" color="warning">
+                  <Button
+            variant="contained"
+            color="warning"
+            onClick={() => handleEditRow(row.id, row)} // Düzenleme butonu
+          >
                       Düzenle
                     </Button>
                     <Button
