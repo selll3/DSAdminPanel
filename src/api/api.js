@@ -49,6 +49,7 @@ export const getProducts = async (pageNumber = 1, pageSize = 50) => {
 };
 
 // Yeni ürün ekle
+
 export const addProduct = async (productData) => {
   try {
     const response = await API.post("/products", productData); // /products endpoint'ine yeni ürün gönderiyoruz
@@ -57,7 +58,7 @@ export const addProduct = async (productData) => {
     console.error("Ürün eklerken bir hata oluştu:", error);
     throw error;
   }
-};
+}; 
 export const searchProducts = async (query) => {
   try {
     const response = await API.get("/products/search", {  // Endpoint doğru mu?
@@ -72,10 +73,9 @@ export const searchProducts = async (query) => {
 
 
 
-// Ürünü düzenle
-export const updateProduct = async (productId, updatedData) => {
+export const updateProduct = async (urunid, updatedProduct) => {
   try {
-    const response = await API.put(`/products/${productId}`, updatedData); // Ürün ID'sine göre güncelleme
+    const response = await API.put(`/products/${urunid}`, updatedProduct); // DÜZELTİLDİ
     return response.data;
   } catch (error) {
     console.error("Ürün güncellenirken bir hata oluştu:", error);
@@ -84,9 +84,9 @@ export const updateProduct = async (productId, updatedData) => {
 };
 
 // Ürünü sil
-export const deleteProduct = async (productId) => {
+export const deleteProduct = async (urunid) => {
   try {
-    const response = await API.delete(`/products/${productId}`); // Ürünü silme
+    const response = await API.delete(`/products/${urunid}`); // Ürünü silme
     return response.data;
   } catch (error) {
     console.error("Ürün silinirken bir hata oluştu:", error);
