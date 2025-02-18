@@ -30,7 +30,11 @@ const TableEditor = ({ isSidebarOpen }) => {
   const [filteredData, setFilteredData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [newRow, setNewRow] = useState({}); // Yeni kayıt için state
-  const [editingRow, setEditingRow] = useState(null); // Düzenlenen satırın ID'si
+  const [editingRow, setEditingRow] = useState(null); 
+  const [products, setProducts] = useState([]);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(false);// Düzenlenen satırın ID'si
 
   useEffect(() => {
     const fetchData = async () => {
