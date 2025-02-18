@@ -43,14 +43,9 @@ export const createMusteri = async (musteriData) => {
   }
 }
 
-export const getProducts = async () => {
-  try {
-    const response = await API.get("/products"); // backend'de /products endpoint'i olduğunu varsayalım
-    return response.data; // Veriyi döndürüyoruz
-  } catch (error) {
-    console.error("Ürünler alınırken bir hata oluştu:", error);
-    throw error;
-  }
+export const getProducts = async (pageNumber = 1, pageSize = 50) => {
+  const response = await API.get(`/products?pageNumber=${pageNumber}&pageSize=${pageSize}`);
+  return response.data;
 };
 
 // Yeni ürün ekle
@@ -63,6 +58,19 @@ export const addProduct = async (productData) => {
     throw error;
   }
 };
+export const searchProducts = async (query) => {
+  try {
+    const response = await API.get("/products/search", {  // Endpoint doğru mu?
+      params: { searchTerm: query }  // Backend'in beklediği parametre adı 'searchTerm'
+    });
+    return response.data.products;  // API'den gelen ürünleri döndür
+  } catch (error) {
+    console.error("Arama hatası:", error);
+    throw error;
+  }
+};
+
+
 
 // Ürünü düzenle
 export const updateProduct = async (productId, updatedData) => {
