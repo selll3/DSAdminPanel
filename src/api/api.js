@@ -52,13 +52,14 @@ export const getProducts = async (pageNumber = 1, pageSize = 50) => {
 
 export const addProduct = async (productData) => {
   try {
-    const response = await API.post("/products", productData); // /products endpoint'ine yeni ürün gönderiyoruz
-    return response.data; // Veriyi döndürüyoruz
+    const response = await API.post("/products", productData); // API'ye yeni ürün ekleme
+    return response.data; // API'nin döndürdüğü yeni ürünü geri döndür
   } catch (error) {
     console.error("Ürün eklerken bir hata oluştu:", error);
     throw error;
   }
-}; 
+};
+
 export const searchProducts = async (query) => {
   try {
     const response = await API.get("/products/search", {  // Endpoint doğru mu?
@@ -83,16 +84,20 @@ export const updateProduct = async (urunid, updatedProduct) => {
   }
 };
 
-// Ürünü sil
 export const deleteProduct = async (urunid) => {
+  if (!urunid) {
+    throw new Error("Ürün ID'si geçersiz!");
+  }
+
   try {
-    const response = await API.delete(`/products/${urunid}`); // Ürünü silme
-    return response.data;
+    const response = await API.delete(`/products/${urunid}`); // Ürünü silme isteği
+    return response.data; // Başarılıysa geri döndür
   } catch (error) {
-    console.error("Ürün silinirken bir hata oluştu:", error);
-    throw error;
+    console.error(`Ürün (ID: ${urunid}) silinirken bir hata oluştu:`, error);
+    throw error; // Hatanın üst katmana ulaşmasını sağlar
   }
 };
+
 // İleride eklenebilecek diğer API işlemleri için yer bırak
 // Örneğin:
 // export const getAdminDetails = async (token) => {

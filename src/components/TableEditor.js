@@ -6,7 +6,7 @@ import "./TableEditor.css"; // Stil dosyası
 
 const TableEditor = ({ isSidebarOpen }) => {
   const columnNames = [
-    "Ürün_kodu", "İsim", "DVZ", "Birim_ fiyat", "İSK", "Marka", "TESLİM", "MİKTAR", "Birim", 
+    "Ürün_kodu", "İsim", "DVZ", "Birim_fiyat", "İSK", "Marka", "TESLİM", "MİKTAR", "Birim", 
     "TEMİN", "Kutu_Miktarı", "Etiketler", "KDV", "Stok", "Ana_kategori", 
     "Stok_kullanır", "Kritik_stok_miktarı"
   ];
@@ -22,6 +22,7 @@ const TableEditor = ({ isSidebarOpen }) => {
   const [openModal, setOpenModal] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // Silme onayı için state
   const [rowToDelete, setRowToDelete] = useState(null); // Silinecek satır
+ 
 
   // Tüm veriyi alıyoruz
   useEffect(() => {
@@ -70,21 +71,28 @@ const TableEditor = ({ isSidebarOpen }) => {
 
   // Yeni satır ekleme
   const handleAddRow = async () => {
-    if (!newRow["Ürün_kodu"] || !newRow["İsim"] || !newRow["Birim_ fiyat"]) {
+    if (!newRow.Ürün_kodu || !newRow.İsim || !newRow.Birim_fiyat) {
       alert("Ürün Kodu, İsim ve Birim Fiyat alanları boş bırakılamaz!");
       return;
     }
   
     try {
-      const newProduct = await addProduct(newRow);
-      setTableData([...tableData, newProduct]);
-      setFilteredData([...filteredData, newProduct]);
-      setNewRow({});
+      await addProduct(newRow);
+      
+      // Güncel veriyi al
+      setPageNumber(1);
+      const data = await getProducts(1, 50);
+      setTableData(data.products);
+      setFilteredData(data.products);
+  
+      setNewRow({}); // Formu temizle
+  
+      alert("Ekleme başarılı! ✅"); //  Ekleme başarılı mesajı
     } catch (error) {
       console.error("Yeni ürün eklenemedi:", error);
     }
   };
-
+  
   // Satır düzenleme
   const handleEditRow = (row) => {
     setEditingRow(row);
@@ -116,19 +124,28 @@ const TableEditor = ({ isSidebarOpen }) => {
 
 
 
-  // Silme işlemi onayı
-  const handleDeleteRow = async () => {
-    try {
-      await deleteProduct(rowToDelete.urunid);
-      const updatedData = tableData.filter((row) => row.urunid !== rowToDelete.urunid);
-      setTableData(updatedData);
-      setFilteredData(updatedData);
-      setOpenDeleteDialog(false); // Dialog'ı kapat
-    } catch (error) {
-      console.error("Ürün silinemedi:", error);
-    }
-  };
-  
+const handleDeleteRow = async () => {
+  if (!rowToDelete) return;
+
+  try {
+    await deleteProduct(rowToDelete.urunid); // API'ye silme isteği gönder
+
+    // Başarıyla silindiyse, ekrandaki tablodan da kaldıralım
+    const updatedData = tableData.filter((row) => row.urunid !== rowToDelete.urunid);
+    setTableData(updatedData);
+    setFilteredData(updatedData);
+
+    setOpenDeleteDialog(false); // Dialog'u kapat
+
+    // Kullanıcıya silindiğini gösterelim
+    alert("Ürün başarıyla silindi! ✅");
+
+  } catch (error) {
+    console.error("Ürün silinemedi:", error);
+    alert("Ürün silinemedi! ❌");
+  }
+};
+
 
   // Sayfa değişimi
   const handlePageChange = (newPageNumber) => {
@@ -156,17 +173,18 @@ const TableEditor = ({ isSidebarOpen }) => {
         <CardContent>
           <Typography variant="h6">Yeni Kayıt Ekle</Typography>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-            {columnNames.map((colName, index) => (
-              <TextField
-                key={index}
-                variant="outlined"
-                size="small"
-                label={colName}
-                value={newRow[`col${index + 1}`] || ""}
-                onChange={(e) => setNewRow({ ...newRow, [`col${index + 1}`]: e.target.value })}
-                style={{ flex: "1 1 150px", minWidth: "120px" }}
-              />
-            ))}
+          {columnNames.map((colName, index) => (
+  <TextField
+    key={index}
+    variant="outlined"
+    size="small"
+    label={colName}
+    value={newRow[colName] || ""}  //  Değişken adını düzelt
+    onChange={(e) => setNewRow({ ...newRow, [colName]: e.target.value })} // Doğru key ile set et
+    style={{ flex: "1 1 150px", minWidth: "120px" }}
+  />
+))}
+
             <Button variant="contained" color="primary" onClick={handleAddRow}>
               Ekle
             </Button>
