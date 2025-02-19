@@ -58,7 +58,11 @@ const TableEditor = ({ isSidebarOpen }) => {
       } else {
         // Arama fonksiyonunu çağır
         const searchResults = await searchProducts(query);
+         console.log('Arama Terimi:', query);
         console.log("Arama Sonuçları:", searchResults);
+
+       
+
         setFilteredData(searchResults); // Filtrelenmiş ürünleri güncelle
         setTotalPages(Math.ceil(searchResults.length / 50)); // Sayfa sayısını hesapla
       }
@@ -254,7 +258,11 @@ const handleDeleteRow = async () => {
             {filteredData.slice((pageNumber - 1) * 50, pageNumber * 50).map((row, index) => (
               <TableRow key={index}>
                 {columnNames.map((colName, colIndex) => (
-                  <TableCell key={colIndex}>{row[colName.toLowerCase().replace(/\s+/g, '')] || "-"}</TableCell>
+                <TableCell key={colIndex}>
+                {colName === "İsim" ? row["İsim"] || "-" : row[colName.toLowerCase().replace(/\s+/g, '')] || "-"}
+              </TableCell>
+              
+               
                 ))}
                 <TableCell>
                   <div style={{ display: "flex", gap: "5px" }}>
