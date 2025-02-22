@@ -108,9 +108,24 @@ export const deleteProduct = async (urunid) => {
 // };
 
 // Müşterileri getir
-export const getMusteriler = async () => {
-  const response = await API.get("/musteri");
-  return response.data;
+export const getMusteriler = async (search, pageNumber = 1, pageSize = 10) => {
+  if (!search || search.length < 3) {
+    console.warn("Müşteri arama terimi en az 3 karakter olmalıdır.");
+    return { musteriler: [], totalItems: 0, totalPages: 0 };
+  }
+
+  try {
+    console.log("Müşteri API'ye istek yapılıyor:", search);
+    const response = await API.get("/musteri", {
+      params: { search, page: pageNumber, pageSize },
+    });
+
+    console.log("API Yanıtı:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Müşterileri çekerken hata oluştu:", error.response?.data || error.message);
+    return { musteriler: [], totalItems: 0, totalPages: 0 };
+  }
 };
 
 export const getUrunler = async (search, pageNumber = 1, pageSize = 10) => {

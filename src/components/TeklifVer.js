@@ -18,10 +18,24 @@ const TeklifVer = ({isSidebarOpen}) => {
   const [iskonto, setIskonto] = useState(0);
   const [teslimSuresi, setTeslimSuresi] = useState("");
   const [searchTerm, setSearchTerm] = useState(""); // Arama terimi
+  const [musteriSearchTerm, setMusteriSearchTerm] = useState("");
 
   useEffect(() => {
-    getMusteriler().then(setMusteriler);
-  }, []); // Musteri listesini sadece bir kere çek
+    if (musteriSearchTerm.length >= 3) { // 🔹 En az 3 karakter girildiyse API çağrısı yap
+      console.log("Müşteri arama terimi:", musteriSearchTerm);
+  
+      const delayDebounceFn = setTimeout(() => {
+        getMusteriler(musteriSearchTerm, 1, 10).then((data) => {
+          console.log("Gelen müşteriler:", data); // ✅ Debug için düzeltildi
+          setMusteriler(data); // ✅ `data.musteriler` yerine `data`
+        });
+      }, 500);
+  
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [musteriSearchTerm]);
+  
+   // Musteri listesini sadece bir kere çek
   
   useEffect(() => {
     if (searchTerm.length >= 4) { // Kullanıcı en az 4 karakter yazınca çalıştır
@@ -265,13 +279,34 @@ const TeklifVer = ({isSidebarOpen}) => {
 <div className="dropdown-container">
   <label>Müşteri Seç:</label>
   <Select
-    value={musteri ? { value: musteri.value, label: musteri.label } : null}
-    onChange={setMusteri}
-    options={musteriler.map(m => ({ value: m.musteriid, label: m.ad_soyad_firma }))}
-    isClearable={true}
-    placeholder="Müşteri arayın..."
+    options={musteriler?.map((m) => ({
+      value: m.musteri_id,
+      label: `${m.ad_soyad_firma}`
+    })) || []}
+    onInputChange={(inputValue, { action }) => {
+      if (action === "input-change") {
+        setMusteriSearchTerm(inputValue); // Kullanıcı yazdıkça arama terimi güncellenir
+      }
+    }}
+    onChange={(selectedOption) => {
+      console.log("Seçilen müşteri:", selectedOption);
+
+      if (!selectedOption) {
+        setMusteri(null); // Eğer seçim kaldırılırsa, state'i sıfırla
+        return;
+      }
+
+      const selectedMusteri = musteriler.find((m) => m.musteri_id === selectedOption.value);
+      setMusteri(selectedMusteri); // Seçilen müşteriyi state'e ata
+    }}
+    value={musteri ? { value: musteri.musteriid, label: musteri.ad_soyad_firma } : null}
+    isClearable
+    isSearchable
+    noOptionsMessage={() => (musteriSearchTerm.length < 3 ? "Lütfen en az 3 karakter girin" : "Sonuç bulunamadı")}
+    placeholder="Müşteri ara ve seç..."
   />
 </div>
+
 
       {/* Ürün Seçimi */}
      {/* Ürün Seçimi ve Tarih Seçimi Alanı */}
