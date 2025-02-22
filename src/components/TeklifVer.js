@@ -1,151 +1,92 @@
-import React, { useState } from "react";
+import "./TeklifVer.css";
+import React, { useEffect, useState } from "react";
 import Select from "react-select";
+import { getMusteriler, getUrunler, postTeklif,postTeklifUrunleri } from "../api/api";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-import "./TeklifVer.css";
 
-// Mevcut müşteri ve ürün verileri
-const Musteriler = [
-  { label: "Ahmet Yılmaz", value: "Ahmet Yılmaz" },
-  { label: "Mehmet Kaya", value: "Mehmet Kaya" },
-  { label: "Ayşe Demir", value: "Ayşe Demir" },
-  // Diğer müşteriler...
-];
+const TeklifVer = ({isSidebarOpen}) => {
+  const [musteriler, setMusteriler] = useState([]);
+  const [urunler, setUrunler] = useState([]);
+  const [musteri, setMusteri] = useState(null);
+  const [urun, setUrun] = useState(null);
+  const [urunlerTablo, setUrunlerTablo] = useState([]);
+  const [teklifTarihi, setTeklifTarihi] = useState(new Date().toISOString().split("T")[0]);
+  const [gecerlilikTarihi, setGecerlilikTarihi] = useState("");
+  const [miktar, setMiktar] = useState(1);
+  const [birimFiyat, setBirimFiyat] = useState(0);
+  const [iskonto, setIskonto] = useState(0);
+  const [teslimSuresi, setTeslimSuresi] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // Arama terimi
 
-const Urunler = [
-  { kod: "UR001", cins: "Demir Boru", dvz: "TL", fiyat: 150, isk: 10, marka: "X", teslim: "7 Gün",miktar:2 },
-  { kod: "UR002", cins: "Bakır Tel", dvz: "USD", fiyat: 200, isk: 5, marka: "Y", teslim: "10 Gün",miktar:4 },
-  { kod: "UR003", cins: "Demir Boru", dvz: "TL", fiyat: 150, isk: 10, marka: "X", teslim: "7 Gün",miktar:6 },
-  { kod: "UR004", cins: "Demir Boru", dvz: "TL", fiyat: 350, isk: 10, marka: "X", teslim: "8 Gün",miktar:8 },
-  { kod: "UR005", cins: "Bakır Tel", dvz: "TL", fiyat: 350, isk: 10, marka: "X", teslim: "8 Gün",miktar:8 },
-  // Diğer ürünler...
-];
-
-const TeklifVer = ({ isSidebarOpen }) => {
-  const [musteri, setMusteri] = useState(null); // Müşteri
-  const [urun, setUrun] = useState(null); // Seçilen ürün
-  const [miktar, setMiktar] = useState(urun?.miktar || 1 );
-const [birimFiyat, setBirimFiyat] = useState(0);
-const [iskonto, setIskonto] = useState(urun?.isk || 0); // Varsayılan olarak ürünün iskonto değeri
-const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsayılan olarak ürünün teslim süresi
-//const [miktar, setMiktar] = useState(1); // Miktar
-  //const [birimFiyat, setBirimFiyat] = useState(0); // Birim fiyat
-  const [urunlerTablo, setUrunlerTablo] = useState([]); // Ürün tablosu
-  const [teklifTarihi, setTeklifTarihi] = useState(new Date().toISOString().split("T")[0]); // Teklif tarihi
-  const [gecerlilikTarihi, setGecerlilikTarihi] = useState(new Date().toISOString().split("T")[0]); // Geçerlilik tarihi
-  const [teklifSaati, setTeklifSaati] = useState("12:00"); // Teklif saati
-  const [kdvOrani, setKdvOrani] = useState(18); // KDV oranı
+  useEffect(() => {
+    getMusteriler().then(setMusteriler);
+  }, []); // Musteri listesini sadece bir kere çek
   
-
-  // Müşteri seçimi
-  const musteriSec = (selectedOption) => {
-    setMusteri(selectedOption);
-  };
-
-  // Ürün seçimi
-  const urunSec = (selectedOption) => {
-    if (selectedOption) {
-      const secilenUrun = Urunler.find((u) => u.kod === selectedOption.value);
-      setUrun(secilenUrun);
-      setBirimFiyat(secilenUrun ? secilenUrun.fiyat : 0);
-      setIskonto(secilenUrun ? secilenUrun.isk:0);
-      setTeslimSuresi(secilenUrun ? secilenUrun.teslim : "");
-      setMiktar(secilenUrun ? secilenUrun.miktar : 1);
-    } else {
-      setUrun(null);
-      setBirimFiyat(0);
-    }
-  };
-
-  // Ürün ekleme
+  useEffect(() => {
+    if (searchTerm.length >= 4) { // Kullanıcı en az 4 karakter yazınca çalıştır
+      console.log("Arama terimi:", searchTerm);
+  
+      const delayDebounceFn = setTimeout(() => {
+        getUrunler(searchTerm, 1, 10).then((data) => {
+          console.log("Gelen ürünler:", data.products);
+          console.log("Toplam ürün sayısı:", data.totalItems);
+          console.log("Toplam sayfa sayısı:", data.totalPages);
+          
+          if (data.products.length > 0) {
+            setUrunler(data.products); // Ürünleri set et
+          }
+        });
+      }, 500); // 500ms debounce süresi
+  
+      return () => clearTimeout(delayDebounceFn); // Önceki isteği iptal et
+    } 
+  }, [searchTerm]);
+  
+  
   const urunEkle = () => {
-    if (!urun) return;
+    if (!urun) return alert("Lütfen ürün seçin!");
     
-    // Kullanıcının eklemek istediği ürünün toplam miktarını hesapla
-    const mevcutToplamMiktar = urunlerTablo
-      .filter((item) => item.kod === urun.kod) // Aynı stok koduna sahip ürünleri bul
-      .reduce((toplam, item) => toplam + item.miktar, 0); // Toplam miktarı hesapla
-
-    // Eğer stok miktarını geçiyorsa eklemeyi engelle
-    if (mevcutToplamMiktar + miktar > urun.miktar) {
-      alert(`Bu üründen en fazla ${urun.miktar} adet ekleyebilirsiniz!`);
-      return;
-    }
-
     const yeniUrun = {
-      kod: urun.kod,
-      cins: urun.cins,
-      dvz: urun.dvz,
-      fiyat: urun.fiyat,
-      isk: iskonto, // Güncellenebilir iskonto
-      marka: urun.marka,
-      teslim: teslimSuresi, // Güncellenebilir teslim süresi
-      miktar: miktar,
-      birimFiyat: birimFiyat,
-      tutar: miktar * birimFiyat * (1 - iskonto / 100) // İskonto hesaplaması eklendi
+      kod: urun.Ürün_kodu,
+      isim: urun.İsim,
+      dvz: urun.DVZ,
+      fiyat: urun.Birim_fiyat,
+      isk: iskonto,
+      marka: urun.Marka,
+      teslim: teslimSuresi,
+      miktar,
+      birimFiyat,
+      tutar: (birimFiyat * miktar) * (1 - iskonto / 100),
     };
 
     setUrunlerTablo([...urunlerTablo, yeniUrun]);
-};
+  };
 
-  
   const urunSil = (index) => {
-    const yeniUrunlerTablo = urunlerTablo.filter((_, idx) => idx !== index);
-    setUrunlerTablo(yeniUrunlerTablo);
+    setUrunlerTablo(urunlerTablo.filter((_, i) => i !== index));
   };
-  let teklifKaydedildi = false;
-  // Teklif kaydetme
-  const teklifKaydet = () => {
-    
-    if (!musteri || urunlerTablo.length === 0) {
-      alert("Lütfen müşteri ve ürünleri seçin.");
-      return;
-    }
 
-    const teklifVerisi = {
-      musteri,
-      urunlerTablo,
-      teklifTarihi,
-      gecerlilikTarihi,
-      kdvOrani,
-    };
-    localStorage.setItem("teklif", JSON.stringify(teklifVerisi));
-    teklifKaydedildi = true; // Teklif kaydedildiğini işaretle
-    alert("Teklif başarıyla kaydedildi. Artık PDF oluşturabilirsiniz.");
-
-  };
-  // Toplam hesaplaması
   const calculateTotals = () => {
     let toplamTL = 0;
     let toplamUSD = 0;
     let toplamEURO = 0;
-
-    urunlerTablo.forEach((item) => {
-      if (item.dvz === "TL") {
-        toplamTL += item.tutar;
-      } else if (item.dvz === "USD") {
-        toplamUSD += item.tutar;
-      } else if (item.dvz === "EURO") {
-        toplamEURO += item.tutar;
-      }
-    });
-    const toplamdvz = toplamTL+toplamEURO+toplamUSD;
-    const kdv = (toplamdvz * kdvOrani) / 100;
-
-    const genelToplam = toplamdvz + kdv;
     
-    return {
-      toplamTL,
-      toplamUSD,
-      toplamEURO,
-      kdv,
-      toplamdvz,
-      genelToplam,
-    };
-  };
-  
+    urunlerTablo.forEach((urun) => {
+      if (urun.dvz === "TL") toplamTL += urun.tutar;
+      else if (urun.dvz === "USD") toplamUSD += urun.tutar;
+      else if (urun.dvz === "EURO") toplamEURO += urun.tutar;
+    });
 
- 
+    const kdv = toplamTL * 0.18; // KDV %18
+    const genelToplam = toplamTL + kdv;
+
+    return { toplamTL, toplamUSD, toplamEURO, kdv, genelToplam };
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value); // Kullanıcının girdiğini al ve state'e ata
+  };
   
   const handleGeneratePDF = () => {
     
@@ -205,7 +146,7 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
     const rows = tableData.map((item, index) => [
       index + 1,
       item.kod,
-      item.cins,
+      item.isim,
       item.dvz,
       item.fiyat,
       item.isk,
@@ -278,48 +219,111 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
     // PDF İndirme
     doc.save("Teklif.pdf");
   };
+  const teklifKaydet = async () => {
+    if (!musteri || urunlerTablo.length === 0) {
+      alert("Lütfen müşteri seçin ve en az bir ürün ekleyin!");
+      return;
+    }
 
+    const teklif = {
+      musteriid: musteri.value,
+      teklif_tarihi: teklifTarihi,
+      gecerlilik_tarihi: gecerlilikTarihi,
+    };
+
+    try {
+      const teklifResponse = await postTeklif(teklif);
+      const teklifId = teklifResponse.teklif_id; // API'den gelen teklif ID
+
+      if (!teklifId) {
+        alert("Teklif kaydedildi, ancak ID alınamadı!");
+        return;
+      }
+
+      // Teklif ürünlerini API'ye gönderme
+      const teklifUrunleri = urunlerTablo.map((urun) => ({
+        teklif_id: teklifId,
+        urun_id: urun.kod,
+        miktar: urun.miktar,
+        birim_fiyat: urun.birimFiyat,
+        tutar: urun.tutar,
+        iskonto: urun.isk,
+        teslim_suresi: urun.teslim,
+      }));
+
+      await postTeklifUrunleri(teklifUrunleri);
+      alert("Teklif ve ürünler başarıyla kaydedildi!");
+    } catch (error) {
+      alert("Teklif kaydedilirken hata oluştu!");
+    }
+  };
   return (
     <div className= {`teklif-container ${isSidebarOpen ? "open" : "closed"}`} >
       <h2>Teklif Ver</h2>
 
       {/* Müşteri Seçimi */}
-      <div className="dropdown-container">
-        <label>Müşteri Seç:</label>
-        <Select
-          value={musteri}
-          onChange={musteriSec}
-          options={Musteriler}
-          getOptionLabel={(e) => e.label}
-          getOptionValue={(e) => e.value}
-          isClearable={true}
-          placeholder="Müşteri arayın..."
-        />
-      </div>
+<div className="dropdown-container">
+  <label>Müşteri Seç:</label>
+  <Select
+    value={musteri ? { value: musteri.value, label: musteri.label } : null}
+    onChange={setMusteri}
+    options={musteriler.map(m => ({ value: m.musteriid, label: m.ad_soyad_firma }))}
+    isClearable={true}
+    placeholder="Müşteri arayın..."
+  />
+</div>
 
       {/* Ürün Seçimi */}
      {/* Ürün Seçimi ve Tarih Seçimi Alanı */}
 <div className="urun-ve-tarih">
-  {/* Ürün Seçimi */}
-  <div className="urun-secim">
-    <label>Ürün Seç:</label>
-    <Select
-      options={Urunler.map((urun) => ({ value: urun.kod, label: urun.kod + " - " + urun.cins }))} 
-      onChange={urunSec} 
-      value={urun ? { value: urun.kod, label: urun.kod + " - " + urun.cins } : null} 
-    />
-  </div>
+<div className="urun-secim">
+<label>Ürün Seç:</label>
+<Select
+  options={urunler?.map((u) => ({
+    value: u.ürün_kodu,
+    label: `${u.ürün_kodu} - ${u.İsim}`
+  })) || []}
+  onInputChange={(inputValue, { action }) => {
+    if (action === "input-change") {
+      setSearchTerm(inputValue);
+    }
+  }}
+  onChange={(selectedOption) => {
+    console.log("Seçilen ürün:", selectedOption);
+    
+    if (!selectedOption) { // ❗ Seçim kaldırıldığında `null` olursa hata almamak için
+      setUrun(null);
+      return;
+    }
+
+    const selectedUrun = urunler.find((u) => u.ürün_kodu === selectedOption.value);
+    setUrun(selectedUrun);
+  }}
+  value={urun ? { value: urun.ürün_kodu, label: `${urun.ürün_kodu} - ${urun.İsim}` } : null}
+  isClearable
+  isSearchable
+  noOptionsMessage={() => (searchTerm.length < 4 ? "Lütfen en az 4 karakter girin" : "Sonuç bulunamadı")}
+  placeholder="Ürün ara ve seç..."
+/>
+
+</div>
+
+
+
+
+
 
   {/* Teklif Tarihi */}
-  <div className="tarih-secim">
-    <label>Teklif Tarihi:</label>
-    <input
-      type="date"
-      value={teklifTarihi}
-      onChange={(e) => setTeklifTarihi(e.target.value)}
-      min={new Date().toISOString().split("T")[0]} // Geçmiş tarihleri engelle
-    />
-  </div>
+<div className="tarih-secim">
+  <label>Teklif Tarihi:</label>
+  <input
+    type="date"
+    value={teklifTarihi}
+    onChange={(e) => setTeklifTarihi(e.target.value)}
+    min={new Date().toISOString().split("T")[0]} // Geçmiş tarihleri engelle
+  />
+</div>
+
 
   {/* Geçerlilik Tarihi */}
   <div className="tarih-secim">
@@ -332,56 +336,52 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
     />
   </div>
 </div>
-      {/* Ürün ve Miktar Ekleme */}
-      {urun && (
-        <div className="urun-bilgileri">
-          <p><strong>Malzeme:</strong> {urun.cins}</p>
-          <p><strong>Döviz:</strong> {urun.dvz}</p>
-          <p><strong>Birim Fiyat:</strong> {urun.fiyat} TL</p>
-          <p><strong>İskonto:</strong> {urun.isk}%</p>
-          <p><strong>Marka:</strong> {urun.marka}</p>
-          <p><strong>Teslimat Süresi:</strong> {urun.teslim}</p>
-          <p><strong>Miktar:</strong> {urun.miktar}</p>
-        </div>
-      )}
+      {/* Ürün Seçildiğinde Bilgileri Göster */}
+{urun && (
+  <div className="urun-bilgileri">
+    <p><strong>Malzeme:</strong> {urun.cins}</p>
+    <p><strong>Döviz:</strong> {urun.dvz}</p>
+    <p><strong>Birim Fiyat:</strong> {urun.birim_fiyat} </p>
+    <p><strong>İskonto:</strong> {urun.iskonto}%</p>
+    <p><strong>Marka:</strong> {urun.marka}</p>
+    <p><strong>Teslimat Süresi:</strong> {urun.teslim}</p>
+    <p><strong>Stok Miktarı:</strong> {urun.miktar}</p>
+  </div>
+)}
 
-     {/* Ürün Miktarı, Birim Fiyat, İskonto ve Teslim Süresi */}
+{/* Ürün Miktarı, Birim Fiyat, İskonto ve Teslim Süresi */}
 <div className="urun-miktar-container">
-<label>
-  Miktar:
-  <input 
-    type="number" 
-    value={miktar} 
-    onChange={(e) => {
-      const yeniMiktar = Number(e.target.value);
-      
-      // Eğer 'urun' tanımlı değilse (null veya undefined ise) kodu durdur.
-      if (!urun) {
-        alert("Lütfen önce bir ürün seçin!");
-        return;
-      }
+  <label>
+    Miktar:
+    <input 
+      type="number" 
+      value={miktar} 
+      onChange={(e) => {
+        const yeniMiktar = Number(e.target.value);
+        
+        if (!urun) {
+          alert("Lütfen önce bir ürün seçin!");
+          return;
+        }
 
-      // Kullanıcı stoktan fazla girerse uyarı ver.
-      if (yeniMiktar > urun.miktar) {
-        alert(`Stokta sadece ${urun.miktar} adet mevcut!`);
-        return;
-      }
+        if (yeniMiktar > urun.miktar) {
+          alert(`Stokta sadece ${urun.miktar} adet mevcut!`);
+          return;
+        }
 
-      setMiktar(yeniMiktar);
-    }} 
-    min="1" 
-    max={urun ? urun.miktar : 1} // Eğer 'urun' yoksa max değeri 1 olarak ayarla.
-  />
-</label>
-
-
+        setMiktar(yeniMiktar);
+      }} 
+      min="1" 
+      max={urun ? urun.miktar : 1} 
+    />
+  </label>
 
   <label>
     Birim Fiyat:
     <input
       type="number"
       value={birimFiyat}
-      onChange={(e) => setBirimFiyat(e.target.value)}
+      onChange={(e) => setBirimFiyat(Number(e.target.value))}
       min="0"
     />
   </label>
@@ -391,7 +391,7 @@ const [teslimSuresi, setTeslimSuresi] = useState(urun?.teslim || ""); // Varsay�
     <input
       type="number"
       value={iskonto}
-      onChange={(e) => setIskonto(e.target.value)}
+      onChange={(e) => setIskonto(Number(e.target.value))}
       min="0"
       max="100"
     />

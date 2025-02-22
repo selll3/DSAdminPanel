@@ -107,3 +107,43 @@ export const deleteProduct = async (urunid) => {
 //   return response.data;
 // };
 
+// Müşterileri getir
+export const getMusteriler = async () => {
+  const response = await API.get("/musteri");
+  return response.data;
+};
+
+export const getUrunler = async (search, pageNumber = 1, pageSize = 10) => {
+  if (!search || search.length < 4) {
+    console.warn("Arama terimi en az 4 karakter olmalıdır.");
+    return { products: [], totalItems: 0, totalPages: 0 };
+  }
+
+  try {
+    console.log("API'ye istek yapılıyor:", search);
+    const response = await API.get("/products/urun", { // ✅ Endpoint `/products/urun`
+      params: { search, page: pageNumber, pageSize }, // ✅ `searchTerm` yerine `search`
+    });
+
+    console.log("API Yanıtı:", response.data);
+    return response.data; // API'den dönen veriyi döndür
+  } catch (error) {
+    console.error("Ürünleri çekerken hata oluştu:", error.response?.data || error.message);
+    return { products: [], totalItems: 0, totalPages: 0 };
+  }
+};
+
+
+
+
+
+
+export const postTeklif = async (teklif) => {
+  const response = await API.post("/teklif", teklif);
+  return response.data; // Buradan teklif_id gelecek
+};
+
+export const postTeklifUrunleri = async (teklifUrunleri) => {
+  const response = await API.post("/teklifurunleri", teklifUrunleri);
+  return response.data;
+};
