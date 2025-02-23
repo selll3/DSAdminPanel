@@ -74,15 +74,31 @@ export const searchProducts = async (query) => {
 
 
 
+
+
+// Ürün Güncelleme API Çağrısı
 export const updateProduct = async (urunid, updatedProduct) => {
   try {
-    const response = await API.put(`/products/${urunid}`, updatedProduct); // DÜZELTİLDİ
-    return response.data;
+    console.log("GÖNDERİLEN VERİ:", updatedProduct);
+
+    const response = await API.put(
+      `/products/${urunid}`,
+      { ...updatedProduct }, // Nesneyi doğru formatta gönderiyoruz
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("API Yanıtı:", response);
+    return response.data; // RETURN yapısını bozmadan geri döndürüyoruz.
   } catch (error) {
-    console.error("Ürün güncellenirken bir hata oluştu:", error);
+    console.error("Ürün güncellenirken bir hata oluştu:", error.response?.data || error.message);
     throw error;
   }
 };
+
 
 export const deleteProduct = async (urunid) => {
   if (!urunid) {

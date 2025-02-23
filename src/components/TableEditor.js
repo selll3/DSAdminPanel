@@ -1,13 +1,34 @@
 import React, { useState, useEffect } from "react";
-import { getProducts, searchProducts } from "../api/api";
-import { addProduct, deleteProduct, updateProduct } from "../api/api";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Card, CardContent, Typography, Modal, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
-import "./TableEditor.css"; // Stil dosyası
+import {
+  getProducts,
+  searchProducts,
+  addProduct,
+  deleteProduct,
+  updateProduct
+} from "../api/api";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  TextField,
+  Typography,
+  Modal,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle
+} from "@mui/material";
+import "./TableEditor.css";
 
 const TableEditor = ({ isSidebarOpen }) => {
   const columnNames = [
-    "Ürün_kodu", "İsim", "DVZ", "Birim_fiyat", "İSK", "Marka", "TESLİM", "MİKTAR", "Birim", 
-    "TEMİN", "Kutu_Miktarı", "Etiketler", "KDV", "Stok", "Ana_kategori", 
+    "Ürün_kodu", "İsim", "DVZ", "Birim_fiyat", "İSK", "Marka", "TESLİM", "MİKTAR",
+    "Birim", "TEMİN", "Kutu_Miktarı", "Etiketler", "KDV", "Stok", "Ana_kategori",
     "Stok_kullanır", "Kritik_stok_miktarı"
   ];
 
@@ -15,23 +36,22 @@ const TableEditor = ({ isSidebarOpen }) => {
   const [filteredData, setFilteredData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [newRow, setNewRow] = useState({});
-  const [editingRow, setEditingRow] = useState(null); 
+  const [editingRow, setEditingRow] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // Silme onayı için state
-  const [rowToDelete, setRowToDelete] = useState(null); // Silinecek satır
- 
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [rowToDelete, setRowToDelete] = useState(null);
+  const [openAddModal, setOpenAddModal] = useState(false); // Yeni ürün ekleme için modal
 
-  // Tüm veriyi alıyoruz
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const data = await getProducts(pageNumber, 50); // API'den ürünler al
+        const data = await getProducts(pageNumber, 50);
         setTableData(data.products);
-        setFilteredData(data.products); // Filtreleme işlemi için veri
+        setFilteredData(data.products);
         setTotalPages(data.totalPages);
       } catch (error) {
         console.error("Ürünler alınamadı:", error);
@@ -43,207 +63,107 @@ const TableEditor = ({ isSidebarOpen }) => {
     fetchData();
   }, [pageNumber]);
 
-  // Arama işlemi
   const handleSearch = async (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
-  
+
     try {
       if (query === "") {
-        // Arama kutusu boşsa tüm veriyi getir
         const data = await getProducts(pageNumber, 50);
         setTableData(data.products);
         setFilteredData(data.products);
         setTotalPages(data.totalPages);
       } else {
-        // Arama fonksiyonunu çağır
         const searchResults = await searchProducts(query);
-         console.log('Arama Terimi:', query);
         console.log("Arama Sonuçları:", searchResults);
-
-       
-
-        setFilteredData(searchResults); // Filtrelenmiş ürünleri güncelle
-        setTotalPages(Math.ceil(searchResults.length / 50)); // Sayfa sayısını hesapla
+        setFilteredData(searchResults);
+        setTotalPages(Math.ceil(searchResults.length / 50));
       }
     } catch (error) {
       console.error("Arama hatası:", error);
     }
-  
-    setPageNumber(1); // Sayfa numarasını sıfırla
+
+    setPageNumber(1);
   };
 
-  // Yeni satır ekleme
   const handleAddRow = async () => {
     if (!newRow.Ürün_kodu || !newRow.İsim || !newRow.Birim_fiyat) {
-      alert("Ürün Kodu, İsim ve Birim Fiyat alanları boş bırakılamaz!");
+      alert("Ürün Kodu, İsim ve Birim Fiyat alanları zorunludur!");
       return;
     }
-  
+
     try {
       await addProduct(newRow);
-      
-      // Güncel veriyi al
       setPageNumber(1);
       const data = await getProducts(1, 50);
       setTableData(data.products);
       setFilteredData(data.products);
-  
-      setNewRow({}); // Formu temizle
-  
-      alert("Ekleme başarılı! ✅"); //  Ekleme başarılı mesajı
+      setNewRow({});
+      setOpenAddModal(false);
+      alert("Ürün başarıyla eklendi!");
     } catch (error) {
       console.error("Yeni ürün eklenemedi:", error);
     }
   };
-  
-  // Satır düzenleme
+
   const handleEditRow = (row) => {
     setEditingRow(row);
-    setOpenModal(true); // Modal'ı aç
+    setOpenModal(true);
   };
 
-  // Satır güncelleme
- // Satır güncelleme
- const handleUpdateRow = async () => {
-  if (!editingRow) return;
+  const handleUpdateRow = async () => {
+    if (!editingRow) return;
 
-  try {
-    // Ürün güncelleniyor
-    await updateProduct(editingRow.urunid, editingRow);
+    try {
+      await updateProduct(editingRow.urunid, editingRow);
+      setPageNumber(1);
+      const data = await getProducts(1, 50);
+      setTableData(data.products);
+      setFilteredData(data.products);
+      setOpenModal(false);
+    } catch (error) {
+      console.error("Ürün güncellenemedi:", error);
+    }
+  };
 
-    // Sayfa numarasını sıfırlayıp yeni veriyi alıyoruz
-    setPageNumber(1);  // Sayfa numarasını sıfırlıyoruz
-    const data = await getProducts(1, 50);  // 1. sayfayı yeniden al
-    setTableData(data.products);  // Yeni veriyi tabloya set ediyoruz
-    setFilteredData(data.products);  // Filtreli veriyi de güncelliyoruz
+  const handleDeleteRow = async () => {
+    if (!rowToDelete) return;
 
-    // Modal'ı kapat
-    setOpenModal(false);
-
-  } catch (error) {
-    console.error("Ürün güncellenemedi:", error);
-  }
-};
-
-
-
-const handleDeleteRow = async () => {
-  if (!rowToDelete) return;
-
-  try {
-    await deleteProduct(rowToDelete.urunid); // API'ye silme isteği gönder
-
-    // Başarıyla silindiyse, ekrandaki tablodan da kaldıralım
-    const updatedData = tableData.filter((row) => row.urunid !== rowToDelete.urunid);
-    setTableData(updatedData);
-    setFilteredData(updatedData);
-
-    setOpenDeleteDialog(false); // Dialog'u kapat
-
-    // Kullanıcıya silindiğini gösterelim
-    alert("Ürün başarıyla silindi! ✅");
-
-  } catch (error) {
-    console.error("Ürün silinemedi:", error);
-    alert("Ürün silinemedi! ❌");
-  }
-};
-
-
-  // Sayfa değişimi
-  const handlePageChange = (newPageNumber) => {
-    if (newPageNumber > 0 && newPageNumber <= totalPages) {
-      setPageNumber(newPageNumber);
+    try {
+      await deleteProduct(rowToDelete.urunid);
+      const updatedData = tableData.filter((row) => row.urunid !== rowToDelete.urunid);
+      setTableData(updatedData);
+      setFilteredData(updatedData);
+      setOpenDeleteDialog(false);
+      alert("Ürün başarıyla silindi!");
+    } catch (error) {
+      console.error("Ürün silinemedi:", error);
+      alert("Ürün silinemedi!");
     }
   };
 
   return (
     <div className={`table-container ${isSidebarOpen ? "open" : "closed"}`}>
       <h1>Tablo Düzenlemeleri</h1>
-
-      {/* Arama Kutusu */}
-      <TextField
-        label="Ara..."
-        variant="outlined"
-        size="small"
-        value={searchQuery}
-        onChange={handleSearch}
-        style={{ marginBottom: "20px", width: "100%" }}
+  
+      <TextField 
+        label="Ara..." 
+        variant="outlined" 
+        size="small" 
+        value={searchQuery} 
+        onChange={handleSearch} 
+        style={{ marginBottom: "20px", width: "100%" }} 
       />
-
-      {/* Yeni Kayıt Ekleme Alanı */}
-      <Card style={{ marginBottom: "20px", padding: "15px", background: "#f8f9fa" }}>
-        <CardContent>
-          <Typography variant="h6">Yeni Kayıt Ekle</Typography>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-          {columnNames.map((colName, index) => (
-  <TextField
-    key={index}
-    variant="outlined"
-    size="small"
-    label={colName}
-    value={newRow[colName] || ""}  //  Değişken adını düzelt
-    onChange={(e) => setNewRow({ ...newRow, [colName]: e.target.value })} // Doğru key ile set et
-    style={{ flex: "1 1 150px", minWidth: "120px" }}
-  />
-))}
-
-            <Button variant="contained" color="primary" onClick={handleAddRow}>
-              Ekle
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Modal Düzenleme Formu */}
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
-        <div className="modal-content" style={{
-          padding: "20px", 
-          background: "#fff", 
-          width: "400px", 
-          margin: "100px auto", 
-          maxHeight: "80vh", 
-          overflowY: "auto"
-        }}>
-          <Typography variant="h6">Ürün Düzenle</Typography>
-          {editingRow && columnNames.map((colName, index) => (
-            <div key={index} style={{ marginBottom: "15px" }}>
-              <TextField
-                label={colName}
-                value={editingRow[colName.toLowerCase().replace(/\s+/g, '')] || ""}
-                onChange={(e) =>
-                  setEditingRow({ ...editingRow, [colName.toLowerCase().replace(/\s+/g, '')]: e.target.value })
-                }
-                variant="outlined"
-                size="small"
-                fullWidth
-              />
-            </div>
-          ))}
-          <Button variant="contained" color="primary" onClick={handleUpdateRow}>
-            Güncelle
-          </Button>
-        </div>
-      </Modal>
-
-      {/* Silme Onay Dialog'u */}
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-        <DialogTitle>Silmek İstediğinizden Emin Misiniz?</DialogTitle>
-        <DialogContent>
-          <Typography>Bu ürün silinecektir. Devam etmek istiyor musunuz?</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)} color="primary">
-            Hayır
-          </Button>
-          <Button onClick={handleDeleteRow} color="secondary">
-            Evet
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Tablo */}
+  
+      <Button 
+        variant="contained" 
+        color="success" 
+        onClick={() => setOpenAddModal(true)} 
+        style={{ marginBottom: "10px" }}
+      >
+        Ürün Ekle
+      </Button>
+  
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -251,34 +171,40 @@ const handleDeleteRow = async () => {
               {columnNames.map((colName, index) => (
                 <TableCell key={index}>{colName}</TableCell>
               ))}
-              <TableCell>Aksiyon</TableCell>
+              <TableCell>Aksiyon</TableCell> {/* Düzenleme ve Silme butonları için ayrı sütun */}
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredData.slice((pageNumber - 1) * 50, pageNumber * 50).map((row, index) => (
+            {filteredData.map((row, index) => (
               <TableRow key={index}>
                 {columnNames.map((colName, colIndex) => (
-                <TableCell key={colIndex}>
-                {colName === "İsim" ? row["İsim"] || "-" : row[colName.toLowerCase().replace(/\s+/g, '')] || "-"}
-              </TableCell>
-              
-               
+                  <TableCell key={colIndex}>{row[colName] || "-"}</TableCell>
                 ))}
                 <TableCell>
-                  <div style={{ display: "flex", gap: "5px" }}>
-                    <Button variant="contained" color="warning" onClick={() => handleEditRow(row)}>
-                      Düzenle
-                    </Button>
-                    <Button 
-                      variant="contained" 
-                      color="error" 
-                      onClick={() => {
-                        setRowToDelete(row);  // Silinecek satırı ayarla
-                        setOpenDeleteDialog(true); // Dialog'u aç
-                      }}
-                    >
-                      Sil
-                    </Button>
+                <div className="button-container">
+                  {/* Düzenleme Butonu */}
+                  <Button 
+                  className="delete-button"
+                    variant="contained" 
+                    color="warning" 
+                    onClick={() => handleEditRow(row)}
+                    style={{ marginRight: "5px" }}
+                  >
+                    Düzenle
+                  </Button>
+  
+                  {/* Silme Butonu */}
+                  <Button 
+                  className="edit-button"
+                    variant="contained" 
+                    color="error" 
+                    onClick={() => { 
+                      setRowToDelete(row); 
+                      setOpenDeleteDialog(true); 
+                    }}
+                  >
+                    Sil
+                  </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -286,21 +212,72 @@ const handleDeleteRow = async () => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      {/* Sayfa Numarası */}
-      <div style={{ marginTop: "20px", display: "flex", justifyContent: "center" }}>
-        <Button disabled={pageNumber <= 1} onClick={() => handlePageChange(pageNumber - 1)}>
-          Önceki
-        </Button>
-        <span style={{ margin: "0 10px" }}>
-          Sayfa {pageNumber} / {totalPages}
-        </span>
-        <Button disabled={pageNumber >= totalPages} onClick={() => handlePageChange(pageNumber + 1)}>
-          Sonraki
-        </Button>
-      </div>
+  
+      {/* Ürün Güncelleme Modalı */}
+      <Modal open={openModal} onClose={() => setOpenModal(false)}>
+        <div className="modal-content">
+          <Typography variant="h6">Ürün Düzenle</Typography>
+          {columnNames.map((colName, index) => (
+            <TextField 
+              key={index} 
+              label={colName} 
+              value={editingRow?.[colName] || ""} 
+              onChange={(e) => setEditingRow({ ...editingRow, [colName]: e.target.value })} 
+            />
+          ))}
+          <Button variant="contained" color="primary" onClick={handleUpdateRow}>Güncelle</Button>
+        </div>
+      </Modal>
+  
+      {/* Ürün Ekleme Modalı */}
+      <Modal open={openAddModal} onClose={() => setOpenAddModal(false)}>
+        <div className="modal-content">
+          <Typography variant="h6">Yeni Ürün Ekle</Typography>
+          {columnNames.map((colName, index) => (
+            <TextField 
+              key={index} 
+              label={colName} 
+              value={newRow[colName] || ""} 
+              onChange={(e) => setNewRow({ ...newRow, [colName]: e.target.value })} 
+            />
+          ))}
+          <Button variant="contained" color="success" onClick={handleAddRow}>Ekle</Button>
+        </div>
+      </Modal>
+  
+      {/* Ürün Silme Onay Dialog */}
+      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+        <DialogTitle>Ürünü Sil</DialogTitle>
+        <DialogContent>
+          <Typography>
+            <strong>{rowToDelete?.İsim}</strong> adlı ürünü silmek istediğinizden emin misiniz?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDeleteDialog(false)} color="secondary">Hayır</Button>
+          <Button 
+            onClick={async () => {
+              if (!rowToDelete) return;
+              try {
+                await deleteProduct(rowToDelete.urunid);
+                setTableData(tableData.filter(item => item.urunid !== rowToDelete.urunid));
+                setFilteredData(filteredData.filter(item => item.urunid !== rowToDelete.urunid));
+                setOpenDeleteDialog(false);
+                alert("Ürün başarıyla silindi!");
+              } catch (error) {
+                console.error("Ürün silinemedi:", error);
+                alert("Ürün silinemedi!");
+              }
+            }} 
+            color="error"
+          >
+            Evet
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
+  
 };
 
 export default TableEditor;

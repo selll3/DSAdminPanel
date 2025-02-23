@@ -7,6 +7,166 @@
   padding: 20px;
 }
 
+/* === Arama Kutusu ve Butonlar === */
+.table-container .MuiTextField-root {
+  margin-bottom: 15px;
+}
+
+.table-container .MuiButton-root {
+  text-transform: none;
+  font-weight: bold;
+  border-radius: 8px;
+}
+
+.table-container .MuiButton-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.table-container .MuiButton-success:hover {
+  background-color: #218838;
+}
+
+/* === Tablo Stili === */
+.MuiTableContainer-root {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.MuiTable-root {
+  min-width: 800px;
+}
+
+.MuiTableHead-root {
+  background-color: #555d65;
+}
+
+.MuiTableHead-root th {
+  color: white;
+  font-weight: bold;
+  text-align: center;
+}
+
+.MuiTableBody-root tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* === Butonlar için Alan === */
+.MuiTableCell-root {
+  text-align: center;
+}
+
+.MuiButton-warning {
+  background-color: #ffc107;
+  color: black;
+}
+
+.MuiButton-warning:hover {
+  background-color: #e0a800;
+}
+
+.MuiButton-error {
+  background-color: #dc3545;
+  color: white;
+}
+
+.MuiButton-error:hover {
+  background-color: #c82333;
+}
+
+/* === Modal Genel Stili === */
+/* === Modal Genel Stili === */
+.modal-content {
+  background: white;
+  padding: 20px;
+  width: 400px;
+  max-height: 80vh; /* Ekranın %80'i kadar yükseklik */
+  overflow-y: auto; /* Dikey kaydırma aktif */
+  margin: 5% auto;
+  border-radius: 10px;
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+/* Butonları yan yana hizala */
+/* Butonları yan yana hizala */
+.button-container {
+  display: flex;
+  align-items: center; /* Dikey hizalamayı sağlar */
+  gap: 5px; /* Butonlar arasındaki boşluğu ayarla */
+}
+
+/* Küçük ve Dar Butonlar */
+.delete-button,
+.edit-button {
+  min-width: unset !important; /* Materyal UI'nin varsayılan genişliğini kaldır */
+  width: 80px !important; /* Genişliği küçült */
+  height: 36px !important; /* Tüm butonlara aynı yükseklik ver */
+  padding: 5px 10px !important; /* İç boşlukları azalt */
+  font-size: 13px !important; /* Yazı boyutunu küçült */
+  text-transform: none !important; /* Büyük harf zorlamasını kaldır */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Sil Butonu (Kırmızı) */
+.delete-button {
+  background-color: #d32f2f !important;
+  color: white !important;
+}
+
+.delete-button:hover {
+  background-color: #b71c1c !important;
+}
+
+/* Düzenle Butonu (Turuncu) */
+.edit-button {
+  background-color: #ff9800 !important;
+  color: white !important;
+}
+
+.edit-button:hover {
+  background-color: #f57c00 !important;
+}
+
+
+/* === Modal Başlık === */
+.modal-content h6 {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+/* === Modal İçerik Scroll === */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #6d747b;
+  border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #61626a;
+}
+
+/* === TextField Stili === */
+.modal-content .MuiTextField-root {
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+/* === Butonlar === */
+.modal-content .MuiButton-root {
+  width: 100%;
+  margin-top: 10px;
+}
+
 
 .table-container.closed {
   left: 60px !important; /* Sidebar kapalıyken */
