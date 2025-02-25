@@ -27,7 +27,7 @@ const TeklifVer = ({isSidebarOpen}) => {
       const delayDebounceFn = setTimeout(() => {
         getMusteriler(musteriSearchTerm, 1, 10).then((data) => {
           console.log("Gelen müşteriler:", data); // ✅ Debug için düzeltildi
-          setMusteriler(data); // ✅ `data.musteriler` yerine `data`
+          setMusteriler(data.musteriler || []); // ✅ `data.musteriler` yerine `data`
         });
       }, 500);
   

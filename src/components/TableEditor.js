@@ -175,41 +175,51 @@ const TableEditor = ({ isSidebarOpen }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredData.map((row, index) => (
-              <TableRow key={index}>
-                {columnNames.map((colName, colIndex) => (
-                  <TableCell key={colIndex}>{row[colName] || "-"}</TableCell>
-                ))}
-                <TableCell>
-                <div className="button-container">
-                  {/* Düzenleme Butonu */}
-                  <Button 
-                  className="delete-button"
-                    variant="contained" 
-                    color="warning" 
-                    onClick={() => handleEditRow(row)}
-                    style={{ marginRight: "5px" }}
-                  >
-                    Düzenle
-                  </Button>
-  
-                  {/* Silme Butonu */}
-                  <Button 
-                  className="edit-button"
-                    variant="contained" 
-                    color="error" 
-                    onClick={() => { 
-                      setRowToDelete(row); 
-                      setOpenDeleteDialog(true); 
-                    }}
-                  >
-                    Sil
-                  </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+  {filteredData.map((row, index) => (
+    <TableRow key={index}>
+      {columnNames.map((colName, colIndex) => {
+        // Büyük/küçük harf farklarını düzeltelim
+        const key = Object.keys(row).find(
+          (k) => k.toLowerCase() === colName.toLowerCase()
+        );
+
+        return (
+          <TableCell key={colIndex}>
+            {key ? row[key] ?? "-" : "-"} 
+          </TableCell>
+        );
+      })}
+      <TableCell>
+        <div className="button-container">
+          {/* Düzenleme Butonu */}
+          <Button
+            className="edit-button"
+            variant="contained"
+            color="warning"
+            onClick={() => handleEditRow(row)}
+            style={{ marginRight: "5px" }}
+          >
+            Düzenle
+          </Button>
+
+          {/* Silme Butonu */}
+          <Button
+            className="delete-button"
+            variant="contained"
+            color="error"
+            onClick={() => {
+              setRowToDelete(row);
+              setOpenDeleteDialog(true);
+            }}
+          >
+            Sil
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  ))}
+</TableBody>
+
         </Table>
       </TableContainer>
   
