@@ -17,7 +17,7 @@ const TeklifVer = ({isSidebarOpen}) => {
   const [birimFiyat, setBirimFiyat] = useState(null);
   const [iskonto, setIskonto] = useState(null);
   const [teslimSuresi, setTeslimSuresi] = useState(null);
-  
+  const [message, setMessage] = useState(""); // Basit mesaj state'i
 
   const [searchTerm, setSearchTerm] = useState(""); // Arama terimi
   const [musteriSearchTerm, setMusteriSearchTerm] = useState("");
@@ -365,10 +365,13 @@ const TeklifVer = ({isSidebarOpen}) => {
 
     try {
         const response = await createTeklif(teklifData);
+
         console.log("✅ Teklif başarıyla kaydedildi:", response);
+        setMessage("✅ Teklif başarıyla kaydedildi!");
         setTeklifKaydedildi(true);
     } catch (error) {
         console.error("❌ Teklif kaydedilirken hata oluştu:", error.response?.data || error.message);
+        setMessage("❌ Teklif kaydedilirken hata oluştu!");
     }
 };
 
@@ -600,6 +603,8 @@ const TeklifVer = ({isSidebarOpen}) => {
         <p><strong>GENEL TOPLAM:</strong> {calculateTotals().genelToplam.toFixed(2)} TL</p>
         <button onClick={handleGeneratePDF}>Teklifi PDF'e Dönüştür</button>
         <button onClick={teklifKaydet}>Teklifi Kaydet</button>
+        {/* Basit mesaj gösterimi */}
+      {message && <div className="message-box">{message}</div>}
         
       </div>
     </div>
