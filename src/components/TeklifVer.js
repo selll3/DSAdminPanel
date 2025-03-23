@@ -1,7 +1,7 @@
 import "./TeklifVer.css";
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
-import { getMusteriler, getUrunler, postTeklif,postTeklifUrunleri } from "../api/api";
+import { getMusteriler, getUrunler,createTeklif,getTeklifler,getTeklifById,createTeklifUrunleri} from "../api/api";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
@@ -13,12 +13,17 @@ const TeklifVer = ({isSidebarOpen}) => {
   const [urunlerTablo, setUrunlerTablo] = useState([]);
   const [teklifTarihi, setTeklifTarihi] = useState(new Date().toISOString().split("T")[0]);
   const [gecerlilikTarihi, setGecerlilikTarihi] = useState("");
-  const [miktar, setMiktar] = useState(1);
-  const [birimFiyat, setBirimFiyat] = useState(0);
-  const [iskonto, setIskonto] = useState(0);
-  const [teslimSuresi, setTeslimSuresi] = useState("");
+  const [miktar, setMiktar] = useState(null);
+  const [birimFiyat, setBirimFiyat] = useState(null);
+  const [iskonto, setIskonto] = useState(null);
+  const [teslimSuresi, setTeslimSuresi] = useState(null);
+  
   const [searchTerm, setSearchTerm] = useState(""); // Arama terimi
   const [musteriSearchTerm, setMusteriSearchTerm] = useState("");
+  const [teklifKaydedildi, setTeklifKaydedildi] = useState(false);
+  const [kurUSD, setKurUSD] = useState(0);
+  const [kurEURO, setKurEURO] = useState(0);
+
 
   useEffect(() => {
     if (musteriSearchTerm.length >= 3) { // 🔹 En az 3 karakter girildiyse API çağrısı yap
@@ -57,25 +62,85 @@ const TeklifVer = ({isSidebarOpen}) => {
     } 
   }, [searchTerm]);
   
+  const KurGiris = () => (
+    <div className="kur-container">
+      <div className="kur-giris">
+        <label>USD Kuru:</label>
+        <input
+          type="text"
+          value={kurUSD}
+          onChange={(e) => setKurUSD(e.target.value)}
+          onBlur={(e) => {
+            // Sayıyı kaydet ve düzelt, virgülü noktaya çevirip float'a çevir
+            let value = e.target.value.replace(',', '.');
+            if (!isNaN(value) && value.trim() !== '') {
+              setKurUSD(parseFloat(value));
+            }
+          }}
+          onFocus={(e) => {
+            // Kullanıcı input kutusuna tıkladığında, geçerli sayıyı göster
+            e.target.value = kurUSD;
+          }}
+          placeholder="Örn: 32.50"
+        />
+      </div>
+  
+      <div className="kur-giris">
+        <label>EURO Kuru:</label>
+        <input
+          type="text"
+          value={kurEURO}
+          onChange={(e) => setKurEURO(e.target.value)}
+          onBlur={(e) => {
+            // Sayıyı kaydet ve düzelt, virgülü noktaya çevirip float'a çevir
+            let value = e.target.value.replace(',', '.');
+            if (!isNaN(value) && value.trim() !== '') {
+              setKurEURO(parseFloat(value));
+            }
+          }}
+          onFocus={(e) => {
+            // Kullanıcı input kutusuna tıkladığında, geçerli sayıyı göster
+            e.target.value = kurEURO;
+          }}
+          placeholder="Örn: 35.20"
+        />
+      </div>
+    </div>
+  );
+  
   
   const urunEkle = () => {
-    if (!urun) return alert("Lütfen ürün seçin!");
+    if (!urun) return alert("Lütfen bir ürün seçin!");
+  
+    const fiyat = birimFiyat ?? urun.birim_fiyat ?? 0; // Eğer fiyat yoksa varsayılan olarak 0
+    const miktarDegeri = miktar ?? urun.miktar ?? 1; // Miktar yoksa varsayılan 1
+    const iskontoDegeri = iskonto ?? urun.İsk ?? 0; // İskonto yoksa varsayılan 0
     
+    const tutar = (fiyat * miktarDegeri) * (1 - iskontoDegeri / 100);
+  
     const yeniUrun = {
-      kod: urun.Ürün_kodu,
+      urunid: urun.urunid,
+      kod: urun.ürün_kodu,
       isim: urun.İsim,
-      dvz: urun.DVZ,
-      fiyat: urun.Birim_fiyat,
-      isk: iskonto,
-      marka: urun.Marka,
-      teslim: teslimSuresi,
-      miktar,
-      birimFiyat,
-      tutar: (birimFiyat * miktar) * (1 - iskonto / 100),
+      dvz: urun.dvz,
+      fiyat: fiyat,
+      isk: iskontoDegeri,
+      marka: urun.marka,
+      teslim: teslimSuresi ?? urun.teslİm,
+      miktar: miktarDegeri,
+      tutar: isNaN(tutar) ? 0 : tutar.toFixed(2), // NaN olursa 0 olarak ayarla
     };
-
+  
     setUrunlerTablo([...urunlerTablo, yeniUrun]);
+  
+    // Alanları temizleyelim
+    setMiktar(null);
+    setBirimFiyat(null);
+    setIskonto(null);
+    setTeslimSuresi(null);
   };
+  
+  
 
   const urunSil = (index) => {
     setUrunlerTablo(urunlerTablo.filter((_, i) => i !== index));
@@ -85,18 +150,51 @@ const TeklifVer = ({isSidebarOpen}) => {
     let toplamTL = 0;
     let toplamUSD = 0;
     let toplamEURO = 0;
-    
+  
+    // Kur değerlerinin geçerli olup olmadığını kontrol et
+    const validKurUSD = !isNaN(kurUSD) && kurUSD > 0 ? kurUSD : 1;  // Eğer kurUSD geçerli değilse, 1 kullan
+    const validKurEURO = !isNaN(kurEURO) && kurEURO > 0 ? kurEURO : 1;  // Eğer kurEURO geçerli değilse, 1 kullan
+  
     urunlerTablo.forEach((urun) => {
-      if (urun.dvz === "TL") toplamTL += urun.tutar;
-      else if (urun.dvz === "USD") toplamUSD += urun.tutar;
-      else if (urun.dvz === "EURO") toplamEURO += urun.tutar;
+      // Ürün tutarını hesapla
+      let urunTutar = urun.fiyat * urun.miktar * (1 - urun.isk / 100);
+  
+      // Sayısal olup olmadığını kontrol et
+      if (isNaN(urunTutar)) {
+        urunTutar = 0; // Eğer geçerli değilse, sıfır kabul et
+      }
+  
+      // Döviz hesaplaması
+      if (urun.dvz === "USD") {
+        toplamUSD += urunTutar;
+        toplamTL += urunTutar * validKurUSD; // USD'yi TL'ye çevir
+      } else if (urun.dvz === "EURO") {
+        toplamEURO += urunTutar;
+        toplamTL += urunTutar * validKurEURO; // EURO'yu TL'ye çevir
+      } else {
+        toplamTL += urunTutar; // TL cinsinden ürünler
+      }
     });
-
-    const kdv = toplamTL * 0.18; // KDV %18
+  
+    // KDV hesaplaması
+    const kdv = toplamTL * 0.20;  // KDV oranı %20
+  
+    // Genel toplam hesaplama (TL, USD ve EURO'nun toplamı)
     const genelToplam = toplamTL + kdv;
-
-    return { toplamTL, toplamUSD, toplamEURO, kdv, genelToplam };
+  
+    // Sayılara dönüştürüp döndür
+    return {
+      toplamTL: Number(toplamTL.toFixed(2)),    // 2 ondalıklı sayılar
+      toplamUSD: Number(toplamUSD.toFixed(2)),
+      toplamEURO: Number(toplamEURO.toFixed(2)),
+      kdv: Number(kdv.toFixed(2)),
+      genelToplam: Number(genelToplam.toFixed(2)),
+    };
   };
+  
+ 
+  
+  
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value); // Kullanıcının girdiğini al ve state'e ata
@@ -162,13 +260,13 @@ const TeklifVer = ({isSidebarOpen}) => {
       item.kod,
       item.isim,
       item.dvz,
-      item.fiyat,
+     
       item.isk,
       item.marka,
       item.teslim,
       item.miktar,
       "-",
-      item.birimFiyat,
+      item.fiyat,
       item.tutar
     ]);
 
@@ -191,13 +289,21 @@ const TeklifVer = ({isSidebarOpen}) => {
     // doc.text(`GENEL TOPLAM: ${totals.genelToplam.toFixed(2)} TL`, 150, finalY + 30);
   
     const totalRows = [
-      [ "","", "TOPLAM TL", totals.toplamTL.toFixed(2) + " TL"],
-      [ "","", "TOPLAM USD", totals.toplamUSD.toFixed(2) + " USD"],
-      [ "","", "TOPLAM EURO", totals.toplamEURO.toFixed(2) + " EURO"],
-      [ "","Para Birimi", "TOPLAM ", totals.toplamdvz.toFixed(2) + ""],
-      [ "TEKLİF AÇIKLAMALARI:","TL", "KDV (" + kdvOrani + "%)", totals.kdv.toFixed(2) + " TL"],
-      [ "","","GENEL TOPLAM", totals.genelToplam.toFixed(2) + " TL"]
+      // TL, USD ve EURO toplamları
+      ["", "", "TOPLAM TL", calculateTotals().toplamTL.toFixed(2) + " TL"],
+      ["", "", "TOPLAM USD", calculateTotals().toplamUSD.toFixed(2) + " USD"],
+      ["", "", "TOPLAM EURO", calculateTotals().toplamEURO.toFixed(2) + " EURO"],
+    
+      // Para birimi için toplam
+      ["", "Para Birimi", "TOPLAM", calculateTotals().toplamTL.toFixed(2) + " TL"],
+    
+      // KDV hesaplaması
+      ["TEKLİF AÇIKLAMALARI:", "TL", "KDV (" + (kdvOrani * 100) + "%)", calculateTotals().kdv.toFixed(2) + " TL"],
+    
+      // Genel toplam
+      ["", "", "GENEL TOPLAM", calculateTotals().genelToplam.toFixed(2) + " TL"]
     ];
+    
     doc.autoTable({
      
       startY: finalY,
@@ -234,43 +340,41 @@ const TeklifVer = ({isSidebarOpen}) => {
     doc.save("Teklif.pdf");
   };
   const teklifKaydet = async () => {
-    if (!musteri || urunlerTablo.length === 0) {
-      alert("Lütfen müşteri seçin ve en az bir ürün ekleyin!");
-      return;
-    }
-
-    const teklif = {
-      musteriid: musteri.value,
-      teklif_tarihi: teklifTarihi,
-      gecerlilik_tarihi: gecerlilikTarihi,
+    const teklifData = {
+        MusteriId: musteri?.musteri_id, // ✅ Doğru alan adı
+        TeklifTarihi: teklifTarihi,
+        GecerlilikTarihi: gecerlilikTarihi,
+        ToplamTl: calculateTotals().toplamTL || 0,
+        ToplamUsd: calculateTotals().toplamUSD || 0,
+        ToplamEuro: calculateTotals().toplamEURO || 0,
+        Toplam: calculateTotals().toplam || 0,
+        Kdv: calculateTotals().kdv || 0,
+        GenelToplam: calculateTotals().genelToplam || 0,
+        TeklifUrunleri: urunlerTablo.map(item => ({
+            UrunId: item.urunid, // ✅ modified8 yerine sadece ID
+            Miktar: item.miktar,
+            BirimFiyat: item.fiyat,
+            Iskonto: item.isk,
+            TeslimSuresi: item.teslim
+        }))
     };
 
     try {
-      const teklifResponse = await postTeklif(teklif);
-      const teklifId = teklifResponse.teklif_id; // API'den gelen teklif ID
-
-      if (!teklifId) {
-        alert("Teklif kaydedildi, ancak ID alınamadı!");
-        return;
-      }
-
-      // Teklif ürünlerini API'ye gönderme
-      const teklifUrunleri = urunlerTablo.map((urun) => ({
-        teklif_id: teklifId,
-        urun_id: urun.kod,
-        miktar: urun.miktar,
-        birim_fiyat: urun.birimFiyat,
-        tutar: urun.tutar,
-        iskonto: urun.isk,
-        teslim_suresi: urun.teslim,
-      }));
-
-      await postTeklifUrunleri(teklifUrunleri);
-      alert("Teklif ve ürünler başarıyla kaydedildi!");
+        const response = await createTeklif(teklifData);
+        console.log("✅ Teklif başarıyla kaydedildi:", response);
     } catch (error) {
-      alert("Teklif kaydedilirken hata oluştu!");
+        console.error("❌ Teklif kaydedilirken hata oluştu:", error.response?.data || error.message);
     }
-  };
+};
+
+  
+
+
+
+  
+  
+  
+
   return (
     <div className= {`teklif-container ${isSidebarOpen ? "open" : "closed"}`} >
       <h2>Teklif Ver</h2>
@@ -348,6 +452,7 @@ const TeklifVer = ({isSidebarOpen}) => {
 
 
 
+
   {/* Teklif Tarihi */}
 <div className="tarih-secim">
   <label>Teklif Tarihi:</label>
@@ -370,42 +475,36 @@ const TeklifVer = ({isSidebarOpen}) => {
       min={new Date().toISOString().split("T")[0]} // Geçmiş tarihleri engelle
     />
   </div>
+
+
 </div>
+
+{/* 🟢 Kur giriş alanları */} <KurGiris />
+
       {/* Ürün Seçildiğinde Bilgileri Göster */}
 {urun && (
   <div className="urun-bilgileri">
-    <p><strong>Malzeme:</strong> {urun.cins}</p>
+    <p><strong>Ürün Kodu:</strong> {urun.ürün_kodu}</p>
+    <p><strong>İsim:</strong> {urun.İsim}</p>
     <p><strong>Döviz:</strong> {urun.dvz}</p>
     <p><strong>Birim Fiyat:</strong> {urun.birim_fiyat} </p>
-    <p><strong>İskonto:</strong> {urun.iskonto}%</p>
+    <p><strong>İskonto:</strong> {urun.İsk}%</p>
     <p><strong>Marka:</strong> {urun.marka}</p>
-    <p><strong>Teslimat Süresi:</strong> {urun.teslim}</p>
-    <p><strong>Stok Miktarı:</strong> {urun.miktar}</p>
+    <p><strong>Teslimat Süresi:</strong> {urun.teslİm}</p>
+    <p><strong>Miktar:</strong> {urun.mİktar}</p>
+    <p><strong>Stok:</strong> {urun.stok}</p>
+    <p><strong>Kdv:</strong> {urun.kdv}</p>
   </div>
 )}
 
 {/* Ürün Miktarı, Birim Fiyat, İskonto ve Teslim Süresi */}
 <div className="urun-miktar-container">
-  <label>
+<label>
     Miktar:
     <input 
       type="number" 
-      value={miktar} 
-      onChange={(e) => {
-        const yeniMiktar = Number(e.target.value);
-        
-        if (!urun) {
-          alert("Lütfen önce bir ürün seçin!");
-          return;
-        }
-
-        if (yeniMiktar > urun.miktar) {
-          alert(`Stokta sadece ${urun.miktar} adet mevcut!`);
-          return;
-        }
-
-        setMiktar(yeniMiktar);
-      }} 
+      value={miktar ?? urun?.miktar} // Kullanıcı değişiklik yapmadıysa ürünün kendi miktarını al
+      onChange={(e) => setMiktar(Number(e.target.value))}
       min="1" 
       max={urun ? urun.miktar : 1} 
     />
@@ -415,7 +514,7 @@ const TeklifVer = ({isSidebarOpen}) => {
     Birim Fiyat:
     <input
       type="number"
-      value={birimFiyat}
+      value={birimFiyat ?? urun?.birim_fiyat} // Kullanıcı değiştirmezse ürünün fiyatını kullan
       onChange={(e) => setBirimFiyat(Number(e.target.value))}
       min="0"
     />
@@ -425,7 +524,7 @@ const TeklifVer = ({isSidebarOpen}) => {
     İskonto (%):
     <input
       type="number"
-      value={iskonto}
+      value={iskonto ?? urun?.İsk} // Kullanıcı değiştirmezse ürünün iskonto değerini kullan
       onChange={(e) => setIskonto(Number(e.target.value))}
       min="0"
       max="100"
@@ -436,7 +535,7 @@ const TeklifVer = ({isSidebarOpen}) => {
     Teslim Süresi:
     <input
       type="text"
-      value={teslimSuresi}
+      value={teslimSuresi ?? urun?.teslİm} // Kullanıcı değiştirmezse ürünün teslim süresini kullan
       onChange={(e) => setTeslimSuresi(e.target.value)}
     />
   </label>
@@ -456,7 +555,7 @@ const TeklifVer = ({isSidebarOpen}) => {
               <th>Stok Kodu</th>
               <th>Malzeme Cinsi</th>
               <th>DVZ</th>
-              <th>Liste Fiyatı</th>
+             
               <th>İskonto</th>
               <th>Marka</th>
               <th>Teslim</th>
@@ -471,14 +570,14 @@ const TeklifVer = ({isSidebarOpen}) => {
               <tr key={index}>
                 <td>{index + 1}</td>
                 <td>{item.kod}</td>
-                <td>{item.cins}</td>
+                <td>{item.isim}</td>
                 <td>{item.dvz}</td>
-                <td>{item.fiyat}</td>
+               
                 <td>{item.isk}</td>
                 <td>{item.marka}</td>
                 <td>{item.teslim}</td>
                 <td>{item.miktar}</td>
-                <td>{item.birimFiyat}</td>
+                <td>{item.fiyat}</td>
                 <td>{item.tutar}</td>
                 <td><button className="urun-sil-btn" onClick={() => urunSil(index)}>Sil</button></td>
               </tr>

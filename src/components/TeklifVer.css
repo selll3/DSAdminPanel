@@ -220,3 +220,27 @@ select {
   max-height: 80vh; /* Kartın aşırı uzamasını önler */
   overflow-y: auto; /* Eğer içerik çok fazla olursa kaydırma çubuğu ekler */
 }
+.kur-wrapper {
+  display: flex;
+  gap: 10px; /* Kutular arasındaki mesafe */
+  justify-content: flex-start;
+  margin-bottom: 10px; /* Altına boşluk bırak */
+}
+
+.kur-container {
+  display: flex;
+  gap: 25px; /* Kutular arasındaki mesafe */
+  justify-content: flex-start;
+}
+
+.kur-giris {
+  display: flex;
+  flex-direction: column;
+  width: 120px; /* Küçük boyutta tut */
+}
+
+.kur-giris input {
+  width: 100%;
+  padding: 5px;
+  font-size: 14px;
+}

@@ -169,12 +169,68 @@ export const getUrunler = async (search, pageNumber = 1, pageSize = 10) => {
 
 
 
-export const postTeklif = async (teklif) => {
-  const response = await API.post("/teklif", teklif);
-  return response.data; // Buradan teklif_id gelecek
+ // API bağlantılarını yöneten dosyan
+
+ // API nesnesini içe aktar
+
+
+
+// Teklif oluşturma
+// Teklif kaydetme API çağrısı
+export const createTeklif = async (teklifData) => {
+  try {
+    const response = await API.post(`/teklif`, teklifData);
+    return response.data; // Backend'den dönen { message, teklifId } nesnesini döndür
+  } catch (error) {
+    console.error("Teklif oluşturulurken hata oluştu:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
-export const postTeklifUrunleri = async (teklifUrunleri) => {
-  const response = await API.post("/teklifurunleri", teklifUrunleri);
-  return response.data;
+// **Teklif ürünlerini ekleme API'si**
+export const createTeklifUrunleri = async (urunlerData) => {
+  try {
+    const response = await API.post(`/teklifurunleri`, urunlerData);
+    return response.data;
+  } catch (error) {
+    console.error("Teklif ürünleri eklenirken hata oluştu:", error.response?.data || error.message);
+    throw error;
+  }
 };
+
+
+
+// Teklifleri listeleme
+export const getTeklifler = async () => {
+  try {
+    const response = await API.get(`/teklif`);
+    return response.data;
+  } catch (error) {
+    console.error("Teklifler alınırken hata oluştu:", error);
+    throw error;
+  }
+};
+
+// Teklif detayını alma
+export const getTeklifById = async (id) => {
+  try {
+    const response = await API.get(`/teklif/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Teklif ${id} alınırken hata oluştu:`, error);
+    throw error;
+  }
+};
+
+// Teklif ürünü ekleme
+export const createTeklifUrun = async (urunData) => {
+  try {
+    const response = await API.post(`/teklifurunleri`, urunData);
+    return response.data;
+  } catch (error) {
+    console.error("Teklif ürünü eklenirken hata oluştu:", error);
+    throw error;
+  }
+};
+
+ 
