@@ -180,7 +180,9 @@ export const getUrunler = async (search, pageNumber = 1, pageSize = 10) => {
 export const createTeklif = async (teklifData) => {
   try {
     const response = await API.post(`/teklif`, teklifData);
-    return response.data; // Backend'den dönen { message, teklifId } nesnesini döndür
+ 
+      return response.data; // Backend'den dönen { message, teklifId } nesnesini döndür
+
   } catch (error) {
     console.error("Teklif oluşturulurken hata oluştu:", error.response?.data || error.message);
     throw error;
