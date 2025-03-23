@@ -18,6 +18,7 @@ const TeklifVer = ({isSidebarOpen}) => {
   const [iskonto, setIskonto] = useState(null);
   const [teslimSuresi, setTeslimSuresi] = useState(null);
   
+
   const [searchTerm, setSearchTerm] = useState(""); // Arama terimi
   const [musteriSearchTerm, setMusteriSearchTerm] = useState("");
   const [teklifKaydedildi, setTeklifKaydedildi] = useState(false);
@@ -201,19 +202,20 @@ const TeklifVer = ({isSidebarOpen}) => {
   };
   
   const handleGeneratePDF = () => {
-    
     if (urunlerTablo.length === 0) {
       alert("Tablo verisi bulunamadı! Lütfen önce ürün ekleyin.");
       return;
     }
+  
     if (!teklifKaydedildi) {
       alert("Önce teklifi kaydetmelisiniz!");
       return;
-  }
+    }
+  
     generatePDF(urunlerTablo);
     alert("PDF başarıyla oluşturuldu!");
-
   };
+  
   const logoUrl= "3Marka.png";
   const generatePDF = (tableData) => {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -231,12 +233,13 @@ const TeklifVer = ({isSidebarOpen}) => {
     doc.text("Mühendislik San. Ve Tic A.Ş", 15, 20);
     doc.text("Adres", 15, 25);
     doc.text("Gebze / Kocaeli", 15, 30);
-    doc.text("Telefon Numarası", 15, 35);
-    doc.text(`FİRMA: ${musteri.label}`, 15, 40);
+    doc.text(`Telefon: ${musteri.telefon}`, 15, 35);
+    doc.text(`FİRMA: ${musteri.ad_soyad_firma}`, 15, 40);
     doc.text("SN:", 15, 45);
 
     // Sol Üstte Logo
     doc.addImage("koronaorta.jpg", "JPG", 85, 5, 40, 40);
+    const kdvOrani = 20; // KDV oranı %20 olarak tanımlanıyor
 
     // Teklifimizdir Yazısı
     doc.setFontSize(14);
@@ -251,8 +254,8 @@ const TeklifVer = ({isSidebarOpen}) => {
     
     // Ürün Tablosu
     const columns = [
-      "Sıra No", "Stok Kodu", "Malzeme Cinsi", "DVZ", "Liste Fiyatı",
-      "ISK", "Marka", "Teslim", "MİK", "BR", "Birim Fiyat", "Tutar"
+      "Sıra No", "Stok Kodu", "Malzeme Cinsi", "DVZ", "İsk",
+      "Marka", "Teslim", "Miktar", "Birim Fiyat", "tutar"
     ];
 
     const rows = tableData.map((item, index) => [
@@ -265,7 +268,7 @@ const TeklifVer = ({isSidebarOpen}) => {
       item.marka,
       item.teslim,
       item.miktar,
-      "-",
+    
       item.fiyat,
       item.tutar
     ]);
@@ -298,7 +301,7 @@ const TeklifVer = ({isSidebarOpen}) => {
       ["", "Para Birimi", "TOPLAM", calculateTotals().toplamTL.toFixed(2) + " TL"],
     
       // KDV hesaplaması
-      ["TEKLİF AÇIKLAMALARI:", "TL", "KDV (" + (kdvOrani * 100) + "%)", calculateTotals().kdv.toFixed(2) + " TL"],
+      ["TEKLİF AÇIKLAMALARI:", "TL", "KDV (" + (kdvOrani) + "%)", calculateTotals().kdv.toFixed(2) + " TL"],
     
       // Genel toplam
       ["", "", "GENEL TOPLAM", calculateTotals().genelToplam.toFixed(2) + " TL"]
@@ -355,13 +358,15 @@ const TeklifVer = ({isSidebarOpen}) => {
             Miktar: item.miktar,
             BirimFiyat: item.fiyat,
             Iskonto: item.isk,
-            TeslimSuresi: item.teslim
+            TeslimSuresi: item.teslim,
+            Tutar:item.tutar
         }))
     };
 
     try {
         const response = await createTeklif(teklifData);
         console.log("✅ Teklif başarıyla kaydedildi:", response);
+        setTeklifKaydedildi(true);
     } catch (error) {
         console.error("❌ Teklif kaydedilirken hata oluştu:", error.response?.data || error.message);
     }
